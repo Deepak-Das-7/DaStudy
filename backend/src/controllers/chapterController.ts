@@ -10,15 +10,10 @@ export const getChapters = async (
     try {
         const { subjectId } = req.query;
 
-        const filter: {
-            subjectId?: mongoose.Types.ObjectId;
-        } = {};
-
         if (subjectId) {
             if (
-                !mongoose.Types.ObjectId.isValid(
-                    subjectId.toString()
-                )
+                typeof subjectId !== "string" ||
+                !mongoose.Types.ObjectId.isValid(subjectId)
             ) {
                 res.status(400).json({
                     success: false,
@@ -27,11 +22,15 @@ export const getChapters = async (
 
                 return;
             }
-
-            filter.subjectId = new mongoose.Types.ObjectId(
-                subjectId.toString()
-            );
         }
+
+        const filter = subjectId
+            ? {
+                subjectId: new mongoose.Types.ObjectId(
+                    subjectId as string
+                ),
+            }
+            : {};
 
         const chapters = await ChapterModel.find(filter)
             .sort({ chapterNumber: 1 })
@@ -52,6 +51,57 @@ export const getChapters = async (
         res.status(500).json({
             success: false,
             message: "Failed to fetch chapters",
+        });
+    }
+};
+
+export const getChapterById = async (
+    req: Request,
+    res: Response
+): Promise<void> => {
+    try {
+        const { id } = req.params;
+
+        if (
+            !id ||
+            typeof id !== "string" ||
+            !mongoose.Types.ObjectId.isValid(id)
+        ) {
+            res.status(400).json({
+                success: false,
+                message: "Invalid chapterId",
+            });
+
+            return;
+        }
+
+        const chapter =
+            await ChapterModel.findById(id).select(
+                "subjectId chapterNumber name slug"
+            );
+
+        if (!chapter) {
+            res.status(404).json({
+                success: false,
+                message: "Chapter not found",
+            });
+
+            return;
+        }
+
+        res.status(200).json({
+            success: true,
+            data: chapter,
+        });
+    } catch (error) {
+        console.error(
+            "Error fetching chapter:",
+            error
+        );
+
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch chapter",
         });
     }
 };

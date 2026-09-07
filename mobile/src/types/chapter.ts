@@ -10,3 +10,8 @@ export type ChaptersResponse = {
     success: boolean;
     data: ChapterItem[];
 };
+
+export type ChapterResponse = {
+    success: boolean;
+    data: ChapterItem;
+};

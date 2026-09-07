@@ -1,93 +1,154 @@
 import {
+    ActivityIndicator,
     Pressable,
     ScrollView,
     StyleSheet,
     Text,
     View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
 
-type ChapterData = {
-    title: string;
-    description: string;
-};
+import {
+    router,
+    useLocalSearchParams,
+} from "expo-router";
 
-const chapterData: Record<string, ChapterData> = {
-    "chapter-1": {
-        title: "Knowing Our Numbers",
-        description:
-            "Learn about numbers, number systems, large numbers, place values, and how numbers are used in everyday life.",
-    },
-    "chapter-2": {
-        title: "Whole Numbers",
-        description:
-            "Understand whole numbers, their properties, number lines, and basic operations.",
-    },
-    "chapter-3": {
-        title: "Playing with Numbers",
-        description:
-            "Explore factors, multiples, divisibility rules, prime numbers, and common number patterns.",
-    },
-    "chapter-4": {
-        title: "Basic Geometrical Ideas",
-        description:
-            "Learn the basic concepts of points, lines, line segments, rays, angles, and simple geometrical shapes.",
-    },
-    "chapter-5": {
-        title: "Understanding Elementary Shapes",
-        description:
-            "Learn about different shapes, angles, triangles, quadrilaterals, and basic geometric measurements.",
-    },
-};
+import { useEffect, useState } from "react";
+
+import { api } from "../../src/services/api";
+
+import type {
+    ChapterItem,
+    ChapterResponse,
+} from "../../src/types/chapter";
 
 export default function ChapterDetailsScreen() {
-    const { id, classNumber, subjectId } =
-        useLocalSearchParams<{
-            id?: string;
-            classNumber?: string;
-            subjectId?: string;
-        }>();
+    const {
+        id,
+        classNumber,
+        subjectName,
+    } = useLocalSearchParams<{
+        id?: string;
+        classNumber?: string;
+        subjectName?: string;
+    }>();
 
-    const chapterId = id ?? "";
+    const [chapter, setChapter] =
+        useState<ChapterItem | null>(null);
 
-    const chapter = chapterData[chapterId];
+    const [loading, setLoading] =
+        useState(true);
 
-    const subjectName = (subjectId ?? "")
-        .split("-")
-        .map(
-            (word) =>
-                word.charAt(0).toUpperCase() + word.slice(1)
-        )
-        .join(" ");
+    const [error, setError] =
+        useState("");
 
-    const handleNotesPress = () => {
-        console.log("Notes pressed");
-    };
+    const fetchChapter =
+        async (): Promise<void> => {
+            if (!id) {
+                setError(
+                    "Chapter information is missing."
+                );
 
-    const handleVideosPress = () => {
-        console.log("Videos pressed");
-    };
+                setLoading(false);
 
-    const handlePracticePress = () => {
-        console.log("Practice pressed");
-    };
+                return;
+            }
 
-    if (!chapter) {
+            try {
+                setLoading(true);
+                setError("");
+
+                const response =
+                    await api.get<ChapterResponse>(
+                        `/chapters/${id}`
+                    );
+
+                setChapter(response.data.data);
+            } catch (error) {
+                console.error(
+                    "Failed to fetch chapter:",
+                    error
+                );
+
+                setError(
+                    "Unable to load this chapter. Please try again."
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+    useEffect(() => {
+        void fetchChapter();
+    }, [id]);
+
+    if (loading) {
         return (
-            <View style={styles.errorContainer}>
+            <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" />
+
+                <Text style={styles.loadingText}>
+                    Loading chapter...
+                </Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={styles.centerContainer}>
                 <Text style={styles.errorTitle}>
-                    Chapter Not Found
+                    Something went wrong
                 </Text>
 
                 <Text style={styles.errorText}>
-                    The selected chapter could not be found.
+                    {error}
+                </Text>
+
+                <Pressable
+                    style={styles.retryButton}
+                    onPress={() => {
+                        void fetchChapter();
+                    }}
+                >
+                    <Text
+                        style={styles.retryButtonText}
+                    >
+                        Retry
+                    </Text>
+                </Pressable>
+
+                <Pressable
+                    style={styles.backButton}
+                    onPress={() => router.back()}
+                >
+                    <Text
+                        style={styles.backButtonText}
+                    >
+                        Go Back
+                    </Text>
+                </Pressable>
+            </View>
+        );
+    }
+
+    if (!chapter) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorTitle}>
+                    Chapter not found
+                </Text>
+
+                <Text style={styles.errorText}>
+                    This chapter is no longer available.
                 </Text>
 
                 <Pressable
                     style={styles.backButton}
                     onPress={() => router.back()}
                 >
-                    <Text style={styles.backButtonText}>
+                    <Text
+                        style={styles.backButtonText}
+                    >
                         Go Back
                     </Text>
                 </Pressable>
@@ -98,7 +159,9 @@ export default function ChapterDetailsScreen() {
     return (
         <ScrollView
             style={styles.container}
-            contentContainerStyle={styles.contentContainer}
+            contentContainerStyle={
+                styles.contentContainer
+            }
             showsVerticalScrollIndicator={false}
         >
             <View style={styles.header}>
@@ -110,97 +173,88 @@ export default function ChapterDetailsScreen() {
                     {subjectName}
                 </Text>
 
-                <Text style={styles.chapterLabel}>
-                    Chapter
-                </Text>
+                <View
+                    style={styles.chapterNumberContainer}
+                >
+                    <Text
+                        style={styles.chapterNumber}
+                    >
+                        Chapter {chapter.chapterNumber}
+                    </Text>
+                </View>
 
                 <Text style={styles.title}>
-                    {chapter.title}
+                    {chapter.name}
                 </Text>
             </View>
 
-            <View style={styles.descriptionCard}>
+            <View style={styles.section}>
                 <Text style={styles.sectionTitle}>
-                    About this chapter
+                    Learn This Chapter
                 </Text>
 
-                <Text style={styles.description}>
-                    {chapter.description}
+                <Text style={styles.sectionText}>
+                    Study notes, video lectures, and
+                    practice questions for this chapter
+                    will be available here.
                 </Text>
             </View>
 
-            <View style={styles.learningSection}>
-                <Text style={styles.sectionTitle}>
-                    Start Learning
-                </Text>
-
+            <View style={styles.options}>
                 <Pressable
                     style={styles.optionCard}
-                    onPress={handleNotesPress}
+                    onPress={() => {
+                        console.log(
+                            "Notes selected:",
+                            chapter._id
+                        );
+                    }}
                 >
-                    <View style={styles.optionIcon}>
-                        <Text style={styles.optionIconText}>
-                            N
-                        </Text>
-                    </View>
+                    <Text style={styles.optionTitle}>
+                        Notes
+                    </Text>
 
-                    <View style={styles.optionContent}>
-                        <Text style={styles.optionTitle}>
-                            Notes
-                        </Text>
-
-                        <Text style={styles.optionDescription}>
-                            Read chapter notes and explanations.
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>›</Text>
+                    <Text style={styles.optionText}>
+                        Read chapter notes and explanations.
+                    </Text>
                 </Pressable>
 
                 <Pressable
                     style={styles.optionCard}
-                    onPress={handleVideosPress}
+                    onPress={() => {
+                        console.log(
+                            "Videos selected:",
+                            chapter._id
+                        );
+                    }}
                 >
-                    <View style={styles.optionIcon}>
-                        <Text style={styles.optionIconText}>
-                            V
-                        </Text>
-                    </View>
+                    <Text style={styles.optionTitle}>
+                        Video Lectures
+                    </Text>
 
-                    <View style={styles.optionContent}>
-                        <Text style={styles.optionTitle}>
-                            Video Lectures
-                        </Text>
-
-                        <Text style={styles.optionDescription}>
-                            Watch curated lectures from YouTube.
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>›</Text>
+                    <Text style={styles.optionText}>
+                        Watch curated lectures for this
+                        chapter.
+                    </Text>
                 </Pressable>
 
                 <Pressable
                     style={styles.optionCard}
-                    onPress={handlePracticePress}
+                    onPress={() => {
+                        console.log(
+                            "Questions selected:",
+                            chapter._id
+                        );
+                    }}
                 >
-                    <View style={styles.optionIcon}>
-                        <Text style={styles.optionIconText}>
-                            Q
-                        </Text>
-                    </View>
+                    <Text style={styles.optionTitle}>
+                        Practice Questions
+                    </Text>
 
-                    <View style={styles.optionContent}>
-                        <Text style={styles.optionTitle}>
-                            Practice Questions
-                        </Text>
-
-                        <Text style={styles.optionDescription}>
-                            Test your understanding with questions.
-                        </Text>
-                    </View>
-
-                    <Text style={styles.arrow}>›</Text>
+                    <Text style={styles.optionText}>
+                        Practice questions and test your
+                        understanding.
+                    </Text>
                 </Pressable>
             </View>
         </ScrollView>
@@ -219,129 +273,127 @@ const styles = StyleSheet.create({
 
     header: {
         paddingTop: 8,
-        paddingBottom: 24,
     },
 
     classText: {
-        fontSize: 15,
+        fontSize: 14,
         fontWeight: "600",
     },
 
     subjectText: {
         marginTop: 4,
-        fontSize: 15,
+        fontSize: 16,
     },
 
-    chapterLabel: {
-        marginTop: 24,
-        fontSize: 14,
+    chapterNumberContainer: {
+        alignSelf: "flex-start",
+        marginTop: 20,
+        paddingHorizontal: 12,
+        paddingVertical: 7,
+        borderRadius: 8,
+        backgroundColor: "#000000",
+    },
+
+    chapterNumber: {
+        color: "#ffffff",
+        fontSize: 13,
+        fontWeight: "600",
     },
 
     title: {
-        marginTop: 6,
+        marginTop: 14,
         fontSize: 30,
         lineHeight: 38,
         fontWeight: "700",
     },
 
-    descriptionCard: {
+    section: {
+        marginTop: 32,
+    },
+
+    sectionTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+    },
+
+    sectionText: {
+        marginTop: 8,
+        fontSize: 15,
+        lineHeight: 23,
+    },
+
+    options: {
+        marginTop: 24,
+    },
+
+    optionCard: {
+        marginBottom: 12,
         padding: 18,
         borderRadius: 12,
         borderWidth: 1,
         borderColor: "#dddddd",
     },
 
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-    },
-
-    description: {
-        marginTop: 10,
-        fontSize: 15,
-        lineHeight: 23,
-    },
-
-    learningSection: {
-        marginTop: 28,
-    },
-
-    optionCard: {
-        minHeight: 82,
-        marginTop: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: "#dddddd",
-        flexDirection: "row",
-        alignItems: "center",
-    },
-
-    optionIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 10,
-        backgroundColor: "#000000",
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    optionIconText: {
-        color: "#ffffff",
-        fontSize: 17,
-        fontWeight: "700",
-    },
-
-    optionContent: {
-        flex: 1,
-        marginLeft: 14,
-    },
-
     optionTitle: {
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: "600",
     },
 
-    optionDescription: {
-        marginTop: 4,
-        fontSize: 13,
-        lineHeight: 18,
+    optionText: {
+        marginTop: 6,
+        fontSize: 14,
+        lineHeight: 21,
     },
 
-    arrow: {
-        marginLeft: 8,
-        fontSize: 28,
-    },
-
-    errorContainer: {
+    centerContainer: {
         flex: 1,
-        padding: 24,
+        paddingHorizontal: 24,
         alignItems: "center",
         justifyContent: "center",
     },
 
-    errorTitle: {
-        fontSize: 24,
-        fontWeight: "700",
+    loadingText: {
+        marginTop: 12,
+        fontSize: 15,
     },
 
-    errorText: {
-        marginTop: 10,
-        fontSize: 15,
+    errorTitle: {
+        fontSize: 20,
+        fontWeight: "700",
         textAlign: "center",
     },
 
-    backButton: {
+    errorText: {
+        marginTop: 8,
+        fontSize: 15,
+        lineHeight: 22,
+        textAlign: "center",
+    },
+
+    retryButton: {
         marginTop: 24,
-        paddingHorizontal: 24,
+        paddingHorizontal: 28,
         paddingVertical: 14,
         borderRadius: 10,
         backgroundColor: "#000000",
     },
 
-    backButtonText: {
+    retryButtonText: {
         color: "#ffffff",
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    backButton: {
+        marginTop: 12,
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#dddddd",
+    },
+
+    backButtonText: {
         fontSize: 15,
         fontWeight: "600",
     },
