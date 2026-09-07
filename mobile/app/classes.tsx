@@ -6,15 +6,12 @@ import {
     Text,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { Animated } from "react-native";
 
 import { api } from "../src/services/api";
-import type {
-    ClassItem,
-    ClassesResponse,
-} from "../src/types/class";
+import type { ClassItem, ClassesResponse } from "../src/types/class";
 import {
     colors,
     shadows,
@@ -23,6 +20,73 @@ import {
     typography,
     getClassColor,
 } from "../src/constants/theme";
+
+// Extracted ClassCard component with its own animations
+const ClassCard = ({
+    item,
+    index,
+    onPress,
+}: {
+    item: ClassItem;
+    index: number;
+    onPress: (classId: string, classNumber: number) => void;
+}) => {
+    const bgColor = getClassColor(item.classNumber);
+    const delay = index * 80;
+
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const translateAnim = useRef(new Animated.Value(20)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 400,
+                delay,
+                useNativeDriver: true,
+            }),
+            Animated.timing(translateAnim, {
+                toValue: 0,
+                duration: 400,
+                delay,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [delay]);
+
+    return (
+        <Animated.View
+            style={{
+                opacity: fadeAnim,
+                transform: [{ translateY: translateAnim }],
+            }}
+        >
+            <Pressable
+                style={({ pressed }) => [
+                    styles.classCard,
+                    { borderLeftColor: bgColor },
+                    pressed && styles.classCardPressed,
+                ]}
+                onPress={() => onPress(item._id, item.classNumber)}
+            >
+                <View style={[styles.classNumberContainer, { backgroundColor: bgColor }]}>
+                    <Text style={styles.classNumber}>{item.classNumber}</Text>
+                </View>
+
+                <View style={styles.classInfo}>
+                    <Text style={styles.className}>{item.name}</Text>
+                    <Text style={styles.classSubtitle}>
+                        {item.subjectCount || 0} subjects • Explore →
+                    </Text>
+                </View>
+
+                <View style={styles.chevronContainer}>
+                    <Text style={styles.chevron}>›</Text>
+                </View>
+            </Pressable>
+        </Animated.View>
+    );
+};
 
 export default function ClassesScreen() {
     const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -33,17 +97,11 @@ export default function ClassesScreen() {
         try {
             setLoading(true);
             setError("");
-
-            const response =
-                await api.get<ClassesResponse>("/classes");
-
+            const response = await api.get<ClassesResponse>("/classes");
             setClasses(response.data.data);
         } catch (error) {
             console.error("Failed to fetch classes:", error);
-
-            setError(
-                "Unable to load classes. Please check your internet connection."
-            );
+            setError("Unable to load classes. Please check your internet connection.");
         } finally {
             setLoading(false);
         }
@@ -53,154 +111,197 @@ export default function ClassesScreen() {
         void fetchClasses();
     }, []);
 
-    const handleClassPress = (
-        classId: string,
-        classNumber: number
-    ) => {
+    const handleClassPress = (classId: string, classNumber: number) => {
         router.push({
             pathname: "/subjects",
-            params: {
-                classId,
-                classNumber: classNumber.toString(),
-            },
+            params: { classId, classNumber: classNumber.toString() },
         });
-    };
-
-    const renderClass = ({
-        item,
-    }: {
-        item: ClassItem;
-    }) => {
-        const avatarBg = getClassColor(item.classNumber);
-
-        return (
-            <Pressable
-                style={({ pressed }) => [
-                    styles.classCard,
-                    pressed && styles.classCardPressed,
-                ]}
-                onPress={() => handleClassPress(item._id, item.classNumber)}
-            >
-                <View style={[styles.classNumberContainer, { backgroundColor: avatarBg }]}>
-                    <Text style={styles.classNumber}>
-                        {item.classNumber}
-                    </Text>
-                </View>
-
-                <View style={styles.classInfo}>
-                    <Text style={styles.className}>
-                        {item.name}
-                    </Text>
-
-                    <Text style={styles.classSubtitle}>
-                        View subjects →
-                    </Text>
-                </View>
-
-                <View style={styles.chevronContainer}>
-                    <Text style={styles.chevron}>›</Text>
-                </View>
-            </Pressable>
-        );
     };
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <View style={styles.loadingIconContainer}>
                         <ActivityIndicator size="large" color={colors.primary} />
                     </View>
-
-                    <Text style={styles.loadingText}>
-                        Loading classes...
-                    </Text>
+                    <Text style={styles.loadingText}>Loading classes...</Text>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     if (error) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <View style={[styles.iconContainer, { backgroundColor: colors.errorLight }]}>
-                        <Text style={styles.errorIcon}>⚠</Text>
+                        <Text style={styles.errorIcon}>⚠️</Text>
                     </View>
-
-                    <Text style={styles.errorTitle}>
-                        Something went wrong
-                    </Text>
-
-                    <Text style={styles.errorText}>
-                        {error}
-                    </Text>
-
+                    <Text style={styles.errorTitle}>Something went wrong</Text>
+                    <Text style={styles.errorText}>{error}</Text>
                     <Pressable
                         style={({ pressed }) => [
                             styles.retryButton,
                             pressed && styles.buttonPressed,
                         ]}
-                        onPress={() => {
-                            void fetchClasses();
-                        }}
+                        onPress={() => void fetchClasses()}
                     >
-                        <Text style={styles.retryButtonText}>
-                            Retry
-                        </Text>
+                        <Text style={styles.retryButtonText}>Retry</Text>
                     </Pressable>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={["top"]}>
-            <View style={styles.container}>
-                <View style={styles.header}>
-                    <View style={styles.headerBadge}>
-                        <Text style={styles.headerBadgeText}>🎓</Text>
+        <View style={styles.container}>
+            {/* Header Section */}
+            <View style={styles.header}>
+                <View style={styles.headerTop}>
+                    <View style={styles.headerIconContainer}>
+                        <Text style={styles.headerIcon}>🎓</Text>
                     </View>
-                    <Text style={styles.title}>
-                        Choose Your Class
-                    </Text>
-
-                    <Text style={styles.subtitle}>
-                        Select your class to start exploring subjects and chapters.
-                    </Text>
+                    <View style={styles.headerTextContainer}>
+                        <Text style={styles.title}>Choose Your Class</Text>
+                        <Text style={styles.subtitle}>
+                            Select your grade to access all subjects and materials.
+                        </Text>
+                    </View>
                 </View>
-
-                <FlatList
-                    data={classes}
-                    keyExtractor={(item) => item._id}
-                    renderItem={renderClass}
-                    showsVerticalScrollIndicator={false}
-                    contentContainerStyle={styles.list}
-                    ItemSeparatorComponent={() => <View style={{ height: spacing.lg }} />}
-                />
+                <View style={styles.headerDivider} />
             </View>
-        </SafeAreaView>
+
+            <FlatList
+                data={classes}
+                keyExtractor={(item) => item._id}
+                renderItem={({ item, index }) => (
+                    <ClassCard item={item} index={index} onPress={handleClassPress} />
+                )}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.list}
+                ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+                ListFooterComponent={<View style={{ height: spacing.xxl }} />}
+            />
+        </View>
     );
 }
 
+// Keep the same styles as before (unchanged)
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-
     container: {
         flex: 1,
+        backgroundColor: colors.background,
         paddingHorizontal: spacing.xl,
+        paddingTop: spacing.xl,
     },
-
+    header: {
+        marginBottom: spacing.xl,
+    },
+    headerTop: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    headerIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: borderRadius.lg,
+        backgroundColor: colors.primaryLight,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: spacing.md,
+    },
+    headerIcon: {
+        fontSize: 30,
+    },
+    headerTextContainer: {
+        flex: 1,
+    },
+    title: {
+        ...typography.h2,
+        color: colors.textPrimary,
+        letterSpacing: -0.5,
+    },
+    subtitle: {
+        ...typography.bodySm,
+        color: colors.textSecondary,
+        marginTop: 2,
+    },
+    headerDivider: {
+        marginTop: spacing.md,
+        height: 2,
+        width: 40,
+        borderRadius: 2,
+        backgroundColor: colors.primary,
+        opacity: 0.3,
+    },
+    list: {
+        paddingBottom: spacing.xxxl,
+    },
+    classCard: {
+        ...shadows.md,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.md,
+        flexDirection: "row",
+        alignItems: "center",
+        borderLeftWidth: 5,
+        borderLeftColor: colors.primary,
+        overflow: "hidden",
+    },
+    classCardPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.98 }],
+    },
+    classNumberContainer: {
+        width: 56,
+        height: 56,
+        borderRadius: borderRadius.md,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    classNumber: {
+        fontSize: 22,
+        fontWeight: "800",
+        color: colors.primary,
+    },
+    classInfo: {
+        flex: 1,
+        marginLeft: spacing.lg,
+    },
+    className: {
+        ...typography.subtitle,
+        color: colors.textPrimary,
+        fontSize: 18,
+    },
+    classSubtitle: {
+        ...typography.caption,
+        color: colors.primary,
+        fontWeight: "600",
+        marginTop: 2,
+    },
+    chevronContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: borderRadius.pill,
+        backgroundColor: colors.primaryLight,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    chevron: {
+        fontSize: 24,
+        color: colors.primary,
+        fontWeight: "700",
+        marginTop: -2,
+        marginLeft: 2,
+    },
     centerContainer: {
         flex: 1,
         paddingHorizontal: spacing.xxl,
         alignItems: "center",
         justifyContent: "center",
     },
-
     loadingIconContainer: {
         width: 72,
         height: 72,
@@ -210,7 +311,11 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: spacing.lg,
     },
-
+    loadingText: {
+        ...typography.caption,
+        color: colors.textSecondary,
+        fontWeight: "500",
+    },
     iconContainer: {
         width: 72,
         height: 72,
@@ -219,122 +324,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: spacing.lg,
     },
-
     errorIcon: {
         fontSize: 32,
     },
-
-    header: {
-        paddingTop: spacing.md,
-        paddingBottom: spacing.xl,
-    },
-
-    headerBadge: {
-        width: 52,
-        height: 52,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.primaryLight,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: spacing.lg,
-    },
-
-    headerBadgeText: {
-        fontSize: 26,
-    },
-
-    title: {
-        ...typography.h2,
-        color: colors.textPrimary,
-        letterSpacing: -0.5,
-    },
-
-    subtitle: {
-        marginTop: spacing.sm,
-        ...typography.body,
-        color: colors.textSecondary,
-    },
-
-    list: {
-        paddingBottom: spacing.xxl,
-    },
-
-    classCard: {
-        ...shadows.md,
-        backgroundColor: colors.card,
-        borderRadius: borderRadius.lg,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.lg,
-        flexDirection: "row",
-        alignItems: "center",
-    },
-
-    classCardPressed: {
-        opacity: 0.85,
-        transform: [{ scale: 0.99 }],
-    },
-
-    classNumberContainer: {
-        width: 52,
-        height: 52,
-        borderRadius: borderRadius.md,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    classNumber: {
-        color: colors.primary,
-        fontSize: 20,
-        fontWeight: "800",
-    },
-
-    classInfo: {
-        flex: 1,
-        marginLeft: spacing.lg,
-    },
-
-    className: {
-        ...typography.subtitle,
-        color: colors.textPrimary,
-    },
-
-    classSubtitle: {
-        marginTop: spacing.xs,
-        ...typography.caption,
-        color: colors.primary,
-        fontWeight: "600",
-    },
-
-    chevronContainer: {
-        width: 32,
-        height: 32,
-        borderRadius: borderRadius.sm,
-        backgroundColor: colors.primaryLight,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-
-    chevron: {
-        fontSize: 22,
-        color: colors.primary,
-        fontWeight: "700",
-        marginTop: -2,
-        marginLeft: 2,
-    },
-
-    loadingText: {
-        marginTop: spacing.md,
-        ...typography.caption,
-        color: colors.textSecondary,
-        fontWeight: "500",
-    },
-
     errorTitle: {
         ...typography.title,
         color: colors.textPrimary,
         textAlign: "center",
     },
-
     errorText: {
         marginTop: spacing.sm,
         ...typography.bodySm,
@@ -342,7 +339,6 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         textAlign: "center",
     },
-
     retryButton: {
         ...shadows.xl,
         marginTop: spacing.xxl,
@@ -351,13 +347,11 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.pill,
         backgroundColor: colors.primary,
     },
-
     retryButtonText: {
         color: "#FFFFFF",
         ...typography.subtitle,
         fontWeight: "700",
     },
-
     buttonPressed: {
         opacity: 0.9,
         transform: [{ scale: 0.98 }],

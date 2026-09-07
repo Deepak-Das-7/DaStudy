@@ -5,23 +5,13 @@ import {
     StyleSheet,
     Text,
     View,
+    Animated,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-
-import {
-    router,
-    useLocalSearchParams,
-} from "expo-router";
-
-import { useEffect, useState } from "react";
+import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState, useRef } from "react";
 
 import { api } from "../../src/services/api";
-
-import type {
-    ChapterItem,
-    ChapterResponse,
-} from "../../src/types/chapter";
-
+import type { ChapterItem, ChapterResponse } from "../../src/types/chapter";
 import {
     colors,
     shadows,
@@ -31,61 +21,135 @@ import {
     getSubjectColor,
 } from "../../src/constants/theme";
 
+// Extracted OptionCard component with its own entrance animation
+const OptionCard = ({
+    emoji,
+    title,
+    description,
+    badgeText,
+    badgeColor,
+    borderColor,
+    iconBg,
+    onPress,
+    index,
+}: {
+    emoji: string;
+    title: string;
+    description: string;
+    badgeText: string;
+    badgeColor: string;
+    borderColor: string;
+    iconBg: string;
+    onPress: () => void;
+    index: number;
+}) => {
+    const delay = index * 120;
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const translateAnim = useRef(new Animated.Value(30)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 500,
+                delay,
+                useNativeDriver: true,
+            }),
+            Animated.timing(translateAnim, {
+                toValue: 0,
+                duration: 500,
+                delay,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, [delay]);
+
+    return (
+        <Animated.View
+            style={{
+                opacity: fadeAnim,
+                transform: [{ translateY: translateAnim }],
+            }}
+        >
+            <Pressable
+                style={({ pressed }) => [
+                    styles.optionCard,
+                    { borderLeftColor: borderColor },
+                    pressed && styles.optionCardPressed,
+                ]}
+                onPress={onPress}
+            >
+                <View style={[styles.optionIconWrap, { backgroundColor: iconBg }]}>
+                    <Text style={styles.optionEmoji}>{emoji}</Text>
+                </View>
+
+                <Text style={styles.optionTitle}>{title}</Text>
+                <Text style={styles.optionText}>{description}</Text>
+
+                <View style={[styles.optionBadge, { backgroundColor: badgeColor }]}>
+                    <Text
+                        style={[
+                            styles.optionBadgeText,
+                            badgeColor === colors.warning && { color: colors.textPrimary },
+                        ]}
+                    >
+                        {badgeText}
+                    </Text>
+                </View>
+            </Pressable>
+        </Animated.View>
+    );
+};
+
 export default function ChapterDetailsScreen() {
-    const {
-        id,
-        classNumber,
-        subjectName,
-    } = useLocalSearchParams<{
+    const { id, classNumber, subjectName } = useLocalSearchParams<{
         id?: string;
         classNumber?: string;
         subjectName?: string;
     }>();
 
-    const [chapter, setChapter] =
-        useState<ChapterItem | null>(null);
+    const [chapter, setChapter] = useState<ChapterItem | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
-    const [loading, setLoading] =
-        useState(true);
+    // Animation for whole content (fade + slide up)
+    const contentFade = useRef(new Animated.Value(0)).current;
+    const contentTranslate = useRef(new Animated.Value(40)).current;
 
-    const [error, setError] =
-        useState("");
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(contentFade, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.timing(contentTranslate, {
+                toValue: 0,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
 
-    const fetchChapter =
-        async (): Promise<void> => {
-            if (!id) {
-                setError(
-                    "Chapter information is missing."
-                );
+    const fetchChapter = async (): Promise<void> => {
+        if (!id) {
+            setError("Chapter information is missing.");
+            setLoading(false);
+            return;
+        }
 
-                setLoading(false);
-
-                return;
-            }
-
-            try {
-                setLoading(true);
-                setError("");
-
-                const response =
-                    await api.get<ChapterResponse>(
-                        `/chapters/${id}`
-                    );
-
-                setChapter(response.data.data);
-            } catch (error) {
-                console.error(
-                    "Failed to fetch chapter:",
-                    error
-                );
-
-                setError(
-                    "Unable to load this chapter. Please try again."
-                );
-            } finally {
-                setLoading(false);
-            }
-        };
+        try {
+            setLoading(true);
+            setError("");
+            const response = await api.get<ChapterResponse>(`/chapters/${id}`);
+            setChapter(response.data.data);
+        } catch (error) {
+            console.error("Failed to fetch chapter:", error);
+            setError("Unable to load this chapter. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         void fetchChapter();
@@ -93,52 +157,35 @@ export default function ChapterDetailsScreen() {
 
     if (loading) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <View style={styles.loadingIconContainer}>
                         <ActivityIndicator size="large" color={colors.primary} />
                     </View>
-
-                    <Text style={styles.loadingText}>
-                        Loading chapter...
-                    </Text>
+                    <Text style={styles.loadingText}>Loading chapter...</Text>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     if (error) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <View style={[styles.iconContainer, { backgroundColor: colors.errorLight }]}>
-                        <Text style={styles.errorIcon}>⚠</Text>
+                        <Text style={styles.errorIcon}>⚠️</Text>
                     </View>
-
-                    <Text style={styles.errorTitle}>
-                        Something went wrong
-                    </Text>
-
-                    <Text style={styles.errorText}>
-                        {error}
-                    </Text>
-
+                    <Text style={styles.errorTitle}>Something went wrong</Text>
+                    <Text style={styles.errorText}>{error}</Text>
                     <Pressable
                         style={({ pressed }) => [
                             styles.retryButton,
                             pressed && styles.buttonPressed,
                         ]}
-                        onPress={() => {
-                            void fetchChapter();
-                        }}
+                        onPress={() => void fetchChapter()}
                     >
-                        <Text
-                            style={styles.retryButtonText}
-                        >
-                            Retry
-                        </Text>
+                        <Text style={styles.retryButtonText}>Retry</Text>
                     </Pressable>
-
                     <Pressable
                         style={({ pressed }) => [
                             styles.backButton,
@@ -146,33 +193,22 @@ export default function ChapterDetailsScreen() {
                         ]}
                         onPress={() => router.back()}
                     >
-                        <Text
-                            style={styles.backButtonText}
-                        >
-                            Go Back
-                        </Text>
+                        <Text style={styles.backButtonText}>Go Back</Text>
                     </Pressable>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     if (!chapter) {
         return (
-            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <View style={styles.container}>
                 <View style={styles.centerContainer}>
                     <View style={[styles.iconContainer, { backgroundColor: colors.warningLight }]}>
                         <Text style={styles.emptyIcon}>🔍</Text>
                     </View>
-
-                    <Text style={styles.errorTitle}>
-                        Chapter not found
-                    </Text>
-
-                    <Text style={styles.errorText}>
-                        This chapter is no longer available.
-                    </Text>
-
+                    <Text style={styles.errorTitle}>Chapter not found</Text>
+                    <Text style={styles.errorText}>This chapter is no longer available.</Text>
                     <Pressable
                         style={({ pressed }) => [
                             styles.backButton,
@@ -180,33 +216,31 @@ export default function ChapterDetailsScreen() {
                         ]}
                         onPress={() => router.back()}
                     >
-                        <Text
-                            style={styles.backButtonText}
-                        >
-                            Go Back
-                        </Text>
+                        <Text style={styles.backButtonText}>Go Back</Text>
                     </Pressable>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     const subjectBg = getSubjectColor(subjectName || "");
 
     return (
-        <SafeAreaView style={styles.safeArea} edges={["top"]}>
-            <ScrollView
-                style={styles.container}
-                contentContainerStyle={
-                    styles.contentContainer
-                }
-                showsVerticalScrollIndicator={false}
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={styles.contentContainer}
+            showsVerticalScrollIndicator={false}
+        >
+            <Animated.View
+                style={{
+                    opacity: contentFade,
+                    transform: [{ translateY: contentTranslate }],
+                }}
             >
+                {/* Breadcrumbs */}
                 <View style={styles.breadcrumbs}>
                     <View style={styles.crumbBadge}>
-                        <Text style={styles.crumbBadgeText}>
-                            Class {classNumber}
-                        </Text>
+                        <Text style={styles.crumbBadgeText}>Class {classNumber}</Text>
                     </View>
                     <Text style={styles.crumbSeparator}>›</Text>
                     <View style={[styles.crumbBadge, { backgroundColor: subjectBg }]}>
@@ -216,192 +250,126 @@ export default function ChapterDetailsScreen() {
                     </View>
                 </View>
 
+                {/* Enhanced Header */}
                 <View style={styles.header}>
-                    <View
-                        style={[styles.chapterNumberContainer, { backgroundColor: colors.primary }]}
-                    >
-                        <Text
-                            style={styles.chapterNumber}
-                        >
-                            📖 Chapter {chapter.chapterNumber}
-                        </Text>
+                    <View style={styles.headerTop}>
+                        <View style={styles.headerIconContainer}>
+                            <Text style={styles.headerIcon}>📖</Text>
+                        </View>
+                        <View style={styles.headerTextContainer}>
+                            <Text style={styles.title}>{chapter.name}</Text>
+                            <Text style={styles.subtitle}>
+                                Chapter {chapter.chapterNumber}
+                            </Text>
+                        </View>
                     </View>
-
-                    <Text style={styles.title}>
-                        {chapter.name}
-                    </Text>
+                    <View style={styles.headerDivider} />
                 </View>
 
+                {/* About Callout */}
                 <View style={[styles.aboutCallout, { backgroundColor: colors.primaryLight }]}>
                     <View style={styles.aboutIconRow}>
                         <View style={styles.aboutIconBubble}>
                             <Text style={styles.aboutIcon}>💡</Text>
                         </View>
                         <View style={styles.aboutHeaderTexts}>
-                            <Text style={styles.aboutLabel}>
-                                About this chapter
-                            </Text>
+                            <Text style={styles.aboutLabel}>About this chapter</Text>
                             <Text style={styles.aboutSubLabel}>
                                 Everything you need to master this topic
                             </Text>
                         </View>
                     </View>
-
                     <View style={styles.aboutDivider} />
-
                     <Text style={styles.aboutDescription}>
                         This chapter covers the core concepts of{" "}
-                        <Text style={styles.aboutHighlight}>{chapter.name}</Text>. 
-                        Work through the detailed notes, watch the curated video 
-                        lectures, and test your knowledge with the practice 
+                        <Text style={styles.aboutHighlight}>{chapter.name}</Text>.
+                        Work through the detailed notes, watch the curated video
+                        lectures, and test your knowledge with the practice
                         questions below to build a solid understanding.
                     </Text>
                 </View>
 
+                {/* Options Section */}
                 <View style={styles.optionsSection}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>
-                            Start Learning
-                        </Text>
+                        <Text style={styles.sectionTitle}>Start Learning</Text>
                         <Text style={styles.sectionSubtitle}>
                             Choose how you want to study
                         </Text>
                     </View>
 
                     <View style={styles.optionGrid}>
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.optionCard,
-                                styles.optionCardNotes,
-                                pressed && styles.optionCardPressed,
-                            ]}
-                            onPress={() => {
-                                console.log(
-                                    "Notes selected:",
-                                    chapter._id
-                                );
-                            }}
-                        >
-                            <View style={[styles.optionIconWrap, { backgroundColor: colors.subjectMath }]}>
-                                <Text style={styles.optionEmoji}>📝</Text>
-                            </View>
-
-                            <Text style={styles.optionTitle}>
-                                Notes
-                            </Text>
-
-                            <Text style={styles.optionText}>
-                                Detailed explanations and chapter summaries.
-                            </Text>
-
-                            <View style={[styles.optionBadge, { backgroundColor: colors.primary }]}>
-                                <Text style={styles.optionBadgeText}>Read →</Text>
-                            </View>
-                        </Pressable>
-
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.optionCard,
-                                styles.optionCardVideo,
-                                pressed && styles.optionCardPressed,
-                            ]}
-                            onPress={() => {
-                                console.log(
-                                    "Videos selected:",
-                                    chapter._id
-                                );
-                            }}
-                        >
-                            <View style={[styles.optionIconWrap, { backgroundColor: colors.subjectScience }]}>
-                                <Text style={styles.optionEmoji}>🎬</Text>
-                            </View>
-
-                            <Text style={styles.optionTitle}>
-                                Video Lectures
-                            </Text>
-
-                            <Text style={styles.optionText}>
-                                Watch curated video lessons for this chapter.
-                            </Text>
-
-                            <View style={[styles.optionBadge, { backgroundColor: colors.success }]}>
-                                <Text style={styles.optionBadgeText}>Watch →</Text>
-                            </View>
-                        </Pressable>
-
-                        <Pressable
-                            style={({ pressed }) => [
-                                styles.optionCard,
-                                styles.optionCardQuestions,
-                                pressed && styles.optionCardPressed,
-                            ]}
-                            onPress={() => {
-                                console.log(
-                                    "Questions selected:",
-                                    chapter._id
-                                );
-                            }}
-                        >
-                            <View style={[styles.optionIconWrap, { backgroundColor: colors.subjectHistory }]}>
-                                <Text style={styles.optionEmoji}>❓</Text>
-                            </View>
-
-                            <Text style={styles.optionTitle}>
-                                Practice Questions
-                            </Text>
-
-                            <Text style={styles.optionText}>
-                                Test yourself with chapter questions.
-                            </Text>
-
-                            <View style={[styles.optionBadge, { backgroundColor: colors.warning }]}>
-                                <Text style={[styles.optionBadgeText, { color: colors.textPrimary }]}>Practice →</Text>
-                            </View>
-                        </Pressable>
+                        <OptionCard
+                            emoji="📝"
+                            title="Notes"
+                            description="Detailed explanations and chapter summaries."
+                            badgeText="Read →"
+                            badgeColor={colors.primary}
+                            borderColor={colors.primary}
+                            iconBg={colors.subjectMath}
+                            onPress={() => console.log("Notes selected:", chapter._id)}
+                            index={0}
+                        />
+                        <OptionCard
+                            emoji="🎬"
+                            title="Video Lectures"
+                            description="Watch curated video lessons for this chapter."
+                            badgeText="Watch →"
+                            badgeColor={colors.success}
+                            borderColor={colors.success}
+                            iconBg={colors.subjectScience}
+                            onPress={() => console.log("Videos selected:", chapter._id)}
+                            index={1}
+                        />
+                        <OptionCard
+                            emoji="❓"
+                            title="Practice Questions"
+                            description="Test yourself with chapter questions."
+                            badgeText="Practice →"
+                            badgeColor={colors.warning}
+                            borderColor={colors.warning}
+                            iconBg={colors.subjectHistory}
+                            onPress={() => console.log("Questions selected:", chapter._id)}
+                            index={2}
+                        />
                     </View>
                 </View>
 
+                {/* Tip Box */}
                 <View style={styles.tipBox}>
                     <Text style={styles.tipEmoji}>✨</Text>
                     <View style={styles.tipTextCol}>
-                        <Text style={styles.tipTitle}>
-                            Pro Tip
-                        </Text>
+                        <Text style={styles.tipTitle}>Pro Tip</Text>
                         <Text style={styles.tipBody}>
-                            Read the notes first, then watch the videos, 
-                            and finish with practice questions for the 
+                            Read the notes first, then watch the videos,
+                            and finish with practice questions for the
                             best retention.
                         </Text>
                     </View>
                 </View>
-            </ScrollView>
-        </SafeAreaView>
+            </Animated.View>
+        </ScrollView>
     );
 }
 
+// Styles – all theme constants remain unchanged
 const styles = StyleSheet.create({
-    safeArea: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-
     container: {
         flex: 1,
     },
-
     contentContainer: {
         paddingHorizontal: spacing.xl,
-        paddingTop: spacing.md,
+        paddingTop: spacing.sm,
         paddingBottom: spacing.xxxl,
     },
 
+    // Breadcrumbs
     breadcrumbs: {
         flexDirection: "row",
         alignItems: "center",
-        marginBottom: spacing.lg,
+        marginBottom: spacing.md,
         flexWrap: "wrap",
     },
-
     crumbBadge: {
         paddingHorizontal: spacing.md,
         paddingVertical: 6,
@@ -410,13 +378,11 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.border,
     },
-
     crumbBadgeText: {
         ...typography.captionSm,
         color: colors.textSecondary,
         fontWeight: "600",
     },
-
     crumbSeparator: {
         fontSize: 18,
         color: colors.textMuted,
@@ -424,56 +390,59 @@ const styles = StyleSheet.create({
         marginTop: -2,
     },
 
+    // Header
     header: {
-        paddingTop: spacing.sm,
-        marginBottom: spacing.xxl,
+        marginBottom: spacing.xl,
     },
-
-    classText: {
-        fontSize: 14,
-        fontWeight: "600",
+    headerTop: {
+        flexDirection: "row",
+        alignItems: "center",
     },
-
-    subjectText: {
-        marginTop: 4,
-        fontSize: 16,
+    headerIconContainer: {
+        width: 60,
+        height: 60,
+        borderRadius: borderRadius.lg,
+        backgroundColor: colors.primaryLight,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: spacing.md,
     },
-
-    chapterNumberContainer: {
-        alignSelf: "flex-start",
-        paddingHorizontal: spacing.lg,
-        paddingVertical: 10,
-        borderRadius: borderRadius.pill,
-        marginBottom: spacing.lg,
-        ...shadows.lg,
+    headerIcon: {
+        fontSize: 30,
     },
-
-    chapterNumber: {
-        color: "#FFFFFF",
-        ...typography.caption,
-        fontWeight: "700",
-        letterSpacing: 0.2,
+    headerTextContainer: {
+        flex: 1,
     },
-
     title: {
         ...typography.h2,
         color: colors.textPrimary,
-        lineHeight: 40,
         letterSpacing: -0.5,
     },
+    subtitle: {
+        ...typography.bodySm,
+        color: colors.textSecondary,
+        marginTop: 2,
+    },
+    headerDivider: {
+        marginTop: spacing.md,
+        height: 2,
+        width: 40,
+        borderRadius: 2,
+        backgroundColor: colors.primary,
+        opacity: 0.3,
+    },
 
+    // About
     aboutCallout: {
         borderRadius: borderRadius.lg,
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.lg,
         marginBottom: spacing.xxxl,
     },
-
     aboutIconRow: {
         flexDirection: "row",
         alignItems: "center",
     },
-
     aboutIconBubble: {
         width: 44,
         height: 44,
@@ -483,75 +452,60 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         ...shadows.sm,
     },
-
     aboutIcon: {
         fontSize: 22,
     },
-
     aboutHeaderTexts: {
         flex: 1,
         marginLeft: spacing.md,
     },
-
     aboutLabel: {
         ...typography.subtitle,
         color: colors.primary,
         fontWeight: "800",
     },
-
     aboutSubLabel: {
         marginTop: 2,
         ...typography.captionSm,
         color: colors.textSecondary,
         fontWeight: "500",
     },
-
     aboutDivider: {
         height: 1,
         backgroundColor: colors.primaryMuted,
         marginVertical: spacing.md,
     },
-
     aboutDescription: {
         ...typography.bodySm,
         color: colors.textPrimary,
         lineHeight: 24,
         opacity: 0.9,
     },
-
     aboutHighlight: {
         color: colors.primary,
         fontWeight: "700",
     },
 
+    // Options
     optionsSection: {
         marginBottom: spacing.xxl,
     },
-
     sectionHeader: {
         marginBottom: spacing.lg,
     },
-
     sectionTitle: {
         ...typography.h3,
         color: colors.textPrimary,
         letterSpacing: -0.3,
     },
-
     sectionSubtitle: {
         marginTop: spacing.xs,
         ...typography.bodySm,
         color: colors.textSecondary,
     },
-
-    section: {
-        marginTop: 32,
-    },
-
     optionGrid: {
         gap: spacing.lg,
     },
-
     optionCard: {
         ...shadows.md,
         backgroundColor: colors.card,
@@ -559,28 +513,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: spacing.lg,
         paddingTop: spacing.lg,
         paddingBottom: spacing.lg,
-    },
-
-    optionCardNotes: {
         borderLeftWidth: 4,
         borderLeftColor: colors.primary,
+        overflow: "hidden",
     },
-
-    optionCardVideo: {
-        borderLeftWidth: 4,
-        borderLeftColor: colors.success,
-    },
-
-    optionCardQuestions: {
-        borderLeftWidth: 4,
-        borderLeftColor: colors.warning,
-    },
-
     optionCardPressed: {
         opacity: 0.9,
         transform: [{ scale: 0.99 }],
     },
-
     optionIconWrap: {
         width: 56,
         height: 56,
@@ -589,37 +529,33 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: spacing.md,
     },
-
     optionEmoji: {
         fontSize: 28,
     },
-
     optionTitle: {
         ...typography.title,
         color: colors.textPrimary,
         marginBottom: spacing.xs,
     },
-
     optionText: {
         ...typography.bodySm,
         color: colors.textSecondary,
         lineHeight: 22,
         marginBottom: spacing.md,
     },
-
     optionBadge: {
         alignSelf: "flex-start",
         paddingHorizontal: spacing.md,
         paddingVertical: 8,
         borderRadius: borderRadius.pill,
     },
-
     optionBadgeText: {
         color: "#FFFFFF",
         ...typography.caption,
         fontWeight: "700",
     },
 
+    // Tip
     tipBox: {
         flexDirection: "row",
         alignItems: "flex-start",
@@ -628,36 +564,32 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.lg,
         backgroundColor: colors.warningLight,
     },
-
     tipEmoji: {
         fontSize: 24,
         marginRight: spacing.md,
     },
-
     tipTextCol: {
         flex: 1,
     },
-
     tipTitle: {
         ...typography.subtitle,
         color: colors.textPrimary,
         fontWeight: "800",
         marginBottom: 2,
     },
-
     tipBody: {
         ...typography.bodySm,
         color: colors.textSecondary,
         lineHeight: 22,
     },
 
+    // Loading/Error states (unchanged)
     centerContainer: {
         flex: 1,
         paddingHorizontal: spacing.xxl,
         alignItems: "center",
         justifyContent: "center",
     },
-
     loadingIconContainer: {
         width: 72,
         height: 72,
@@ -667,7 +599,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: spacing.lg,
     },
-
     iconContainer: {
         width: 72,
         height: 72,
@@ -676,28 +607,23 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         marginBottom: spacing.lg,
     },
-
     errorIcon: {
         fontSize: 32,
     },
-
     emptyIcon: {
         fontSize: 32,
     },
-
     loadingText: {
         marginTop: spacing.md,
         ...typography.caption,
         color: colors.textSecondary,
         fontWeight: "500",
     },
-
     errorTitle: {
         ...typography.title,
         color: colors.textPrimary,
         textAlign: "center",
     },
-
     errorText: {
         marginTop: spacing.sm,
         ...typography.bodySm,
@@ -705,7 +631,6 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         textAlign: "center",
     },
-
     retryButton: {
         ...shadows.xl,
         marginTop: spacing.xxl,
@@ -714,18 +639,15 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.pill,
         backgroundColor: colors.primary,
     },
-
     retryButtonText: {
         color: "#FFFFFF",
         ...typography.subtitle,
         fontWeight: "700",
     },
-
     buttonPressed: {
         opacity: 0.9,
         transform: [{ scale: 0.98 }],
     },
-
     backButton: {
         marginTop: spacing.md,
         paddingHorizontal: spacing.xxxl,
@@ -736,13 +658,11 @@ const styles = StyleSheet.create({
         backgroundColor: colors.card,
         ...shadows.sm,
     },
-
     backButtonText: {
         ...typography.subtitle,
         fontWeight: "700",
         color: colors.textPrimary,
     },
-
     outlineButtonPressed: {
         opacity: 0.85,
         transform: [{ scale: 0.99 }],

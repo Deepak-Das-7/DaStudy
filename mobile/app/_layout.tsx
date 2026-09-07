@@ -19,6 +19,9 @@ export default function RootLayout() {
                         color: "#1E293B",
                     },
                     headerBackTitle: " ",
+                    headerBackButtonDisplayMode: "minimal",
+                    headerTitleAlign: "left",
+                    headerTransparent: false,
                     contentStyle: {
                         backgroundColor: "#F8FAFC",
                     },
