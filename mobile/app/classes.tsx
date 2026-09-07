@@ -44,10 +44,14 @@ export default function ClassesScreen() {
         void fetchClasses();
     }, []);
 
-    const handleClassPress = (classNumber: number) => {
+    const handleClassPress = (
+        classId: string,
+        classNumber: number
+    ) => {
         router.push({
             pathname: "/subjects",
             params: {
+                classId,
                 classNumber: classNumber.toString(),
             },
         });
@@ -61,8 +65,7 @@ export default function ClassesScreen() {
         return (
             <Pressable
                 style={styles.classCard}
-                onPress={() => handleClassPress(item.classNumber)}
-            >
+                onPress={() => handleClassPress(item._id, item.classNumber)}            >
                 <View style={styles.classNumberContainer}>
                     <Text style={styles.classNumber}>
                         {item.classNumber}

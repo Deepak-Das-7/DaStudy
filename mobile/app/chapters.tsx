@@ -1,68 +1,102 @@
 import {
+    ActivityIndicator,
     FlatList,
     Pressable,
     StyleSheet,
     Text,
     View,
 } from "react-native";
-import { router, useLocalSearchParams } from "expo-router";
+import {
+    router,
+    useLocalSearchParams,
+} from "expo-router";
+import { useEffect, useState } from "react";
 
-type Chapter = {
-    id: string;
-    chapterNumber: number;
-    name: string;
-};
-
-const chapters: Chapter[] = [
-    {
-        id: "chapter-1",
-        chapterNumber: 1,
-        name: "Knowing Our Numbers",
-    },
-    {
-        id: "chapter-2",
-        chapterNumber: 2,
-        name: "Whole Numbers",
-    },
-    {
-        id: "chapter-3",
-        chapterNumber: 3,
-        name: "Playing with Numbers",
-    },
-    {
-        id: "chapter-4",
-        chapterNumber: 4,
-        name: "Basic Geometrical Ideas",
-    },
-    {
-        id: "chapter-5",
-        chapterNumber: 5,
-        name: "Understanding Elementary Shapes",
-    },
-];
+import { api } from "../src/services/api";
+import type {
+    ChapterItem,
+    ChaptersResponse,
+} from "../src/types/chapter";
 
 export default function ChaptersScreen() {
-    const { classNumber, subjectId } =
-        useLocalSearchParams<{
-            classNumber?: string;
-            subjectId?: string;
-        }>();
+    const {
+        classId,
+        classNumber,
+        subjectId,
+        subjectName,
+    } = useLocalSearchParams<{
+        classId?: string;
+        classNumber?: string;
+        subjectId?: string;
+        subjectName?: string;
+    }>();
 
-    const selectedClass = classNumber ?? "";
-    const selectedSubject = subjectId ?? "";
+    const [chapters, setChapters] = useState<
+        ChapterItem[]
+    >([]);
 
-    const subjectName = selectedSubject
-        .split("-")
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+    const [loading, setLoading] =
+        useState(true);
 
-    const handleChapterPress = (chapterId: string) => {
+    const [error, setError] =
+        useState("");
+
+    const fetchChapters =
+        async (): Promise<void> => {
+            if (!subjectId) {
+                setError(
+                    "Subject information is missing."
+                );
+
+                setLoading(false);
+
+                return;
+            }
+
+            try {
+                setLoading(true);
+                setError("");
+
+                const response =
+                    await api.get<ChaptersResponse>(
+                        "/chapters",
+                        {
+                            params: {
+                                subjectId,
+                            },
+                        }
+                    );
+
+                setChapters(response.data.data);
+            } catch (error) {
+                console.error(
+                    "Failed to fetch chapters:",
+                    error
+                );
+
+                setError(
+                    "Unable to load chapters. Please try again."
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+    useEffect(() => {
+        void fetchChapters();
+    }, [subjectId]);
+
+    const handleChapterPress = (
+        chapterId: string
+    ) => {
         router.push({
             pathname: "/chapter/[id]",
             params: {
                 id: chapterId,
-                classNumber: selectedClass,
-                subjectId: selectedSubject,
+                classId: classId ?? "",
+                classNumber: classNumber ?? "",
+                subjectId: subjectId ?? "",
+                subjectName: subjectName ?? "",
             },
         });
     };
@@ -70,26 +104,36 @@ export default function ChaptersScreen() {
     const renderChapter = ({
         item,
     }: {
-        item: Chapter;
+        item: ChapterItem;
     }) => {
         return (
             <Pressable
                 style={styles.chapterCard}
-                onPress={() => handleChapterPress(item.id)}
+                onPress={() =>
+                    handleChapterPress(item._id)
+                }
             >
-                <View style={styles.chapterNumber}>
-                    <Text style={styles.chapterNumberText}>
+                <View
+                    style={styles.chapterNumberContainer}
+                >
+                    <Text
+                        style={styles.chapterNumber}
+                    >
                         {item.chapterNumber}
                     </Text>
                 </View>
 
                 <View style={styles.chapterInfo}>
-                    <Text style={styles.chapterLabel}>
-                        Chapter {item.chapterNumber}
+                    <Text
+                        style={styles.chapterName}
+                    >
+                        {item.name}
                     </Text>
 
-                    <Text style={styles.chapterName}>
-                        {item.name}
+                    <Text
+                        style={styles.chapterSubtitle}
+                    >
+                        Open chapter
                     </Text>
                 </View>
 
@@ -100,29 +144,80 @@ export default function ChaptersScreen() {
         );
     };
 
+    if (loading) {
+        return (
+            <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" />
+
+                <Text style={styles.loadingText}>
+                    Loading chapters...
+                </Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorTitle}>
+                    Something went wrong
+                </Text>
+
+                <Text style={styles.errorText}>
+                    {error}
+                </Text>
+
+                <Pressable
+                    style={styles.retryButton}
+                    onPress={() => {
+                        void fetchChapters();
+                    }}
+                >
+                    <Text
+                        style={styles.retryButtonText}
+                    >
+                        Retry
+                    </Text>
+                </Pressable>
+            </View>
+        );
+    }
+
+    if (chapters.length === 0) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.emptyTitle}>
+                    No chapters available
+                </Text>
+
+                <Text style={styles.emptyText}>
+                    Chapters for this subject are
+                    not available yet.
+                </Text>
+            </View>
+        );
+    }
+
     return (
         <View style={styles.container}>
             <View style={styles.header}>
+                <Text style={styles.classTitle}>
+                    Class {classNumber}
+                </Text>
+
                 <Text style={styles.title}>
-                    Chapters
-                </Text>
-
-                <Text style={styles.classText}>
-                    Class {selectedClass}
-                </Text>
-
-                <Text style={styles.subjectText}>
                     {subjectName}
                 </Text>
 
                 <Text style={styles.subtitle}>
-                    Select a chapter to start studying.
+                    Choose a chapter to continue
+                    learning.
                 </Text>
             </View>
 
             <FlatList
                 data={chapters}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => item._id}
                 renderItem={renderChapter}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.list}
@@ -142,25 +237,19 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
     },
 
+    classTitle: {
+        fontSize: 14,
+        fontWeight: "600",
+    },
+
     title: {
+        marginTop: 4,
         fontSize: 28,
         fontWeight: "700",
     },
 
-    classText: {
-        marginTop: 8,
-        fontSize: 17,
-        fontWeight: "600",
-    },
-
-    subjectText: {
-        marginTop: 4,
-        fontSize: 16,
-        fontWeight: "500",
-    },
-
     subtitle: {
-        marginTop: 6,
+        marginTop: 8,
         fontSize: 15,
         lineHeight: 22,
     },
@@ -170,7 +259,7 @@ const styles = StyleSheet.create({
     },
 
     chapterCard: {
-        minHeight: 82,
+        minHeight: 76,
         marginBottom: 12,
         paddingHorizontal: 16,
         borderRadius: 12,
@@ -180,18 +269,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
-    chapterNumber: {
+    chapterNumberContainer: {
         width: 44,
         height: 44,
-        borderRadius: 10,
+        borderRadius: 22,
         backgroundColor: "#000000",
         alignItems: "center",
         justifyContent: "center",
     },
 
-    chapterNumberText: {
+    chapterNumber: {
         color: "#ffffff",
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: "700",
     },
 
@@ -200,18 +289,70 @@ const styles = StyleSheet.create({
         marginLeft: 14,
     },
 
-    chapterLabel: {
-        fontSize: 13,
-        marginBottom: 3,
-    },
-
     chapterName: {
         fontSize: 16,
         fontWeight: "600",
     },
 
+    chapterSubtitle: {
+        marginTop: 4,
+        fontSize: 13,
+    },
+
     arrow: {
         fontSize: 28,
         marginLeft: 8,
+    },
+
+    centerContainer: {
+        flex: 1,
+        paddingHorizontal: 24,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+
+    loadingText: {
+        marginTop: 12,
+        fontSize: 15,
+    },
+
+    errorTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        textAlign: "center",
+    },
+
+    errorText: {
+        marginTop: 8,
+        fontSize: 15,
+        lineHeight: 22,
+        textAlign: "center",
+    },
+
+    retryButton: {
+        marginTop: 24,
+        paddingHorizontal: 28,
+        paddingVertical: 14,
+        borderRadius: 10,
+        backgroundColor: "#000000",
+    },
+
+    retryButtonText: {
+        color: "#ffffff",
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    emptyTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        textAlign: "center",
+    },
+
+    emptyText: {
+        marginTop: 8,
+        fontSize: 15,
+        lineHeight: 22,
+        textAlign: "center",
     },
 });
