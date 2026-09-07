@@ -8,9 +8,7 @@
   "dev": "tsx watch src/server.ts",
   "start": "tsx src/server.ts",
   "typecheck": "tsc --noEmit",
-  "seed:classes": "tsx src/seedClasses.ts",
-  "seed:subjects": "tsx src/seedSubjects.ts",
-  "seed:chapters": "tsx src/seedChapters.ts"
+  "seed": "tsx src/seed/seed.ts"
 },
   "keywords": [],
   "author": "",
