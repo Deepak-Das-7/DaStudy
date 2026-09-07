@@ -6,6 +6,7 @@ import {
     Text,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
     router,
     useLocalSearchParams,
@@ -17,6 +18,14 @@ import type {
     ChapterItem,
     ChaptersResponse,
 } from "../src/types/chapter";
+import {
+    colors,
+    shadows,
+    spacing,
+    borderRadius,
+    typography,
+    getSubjectColor,
+} from "../src/constants/theme";
 
 export default function ChaptersScreen() {
     const {
@@ -101,140 +110,232 @@ export default function ChaptersScreen() {
         });
     };
 
+    const getChapterEmoji = (index: number): string => {
+        const emojis = ["📘", "📗", "📕", "📙", "📓", "📔", "📒", "📚", "📖", "🗂️"];
+        return emojis[index % emojis.length];
+    };
+
     const renderChapter = ({
         item,
+        index,
     }: {
         item: ChapterItem;
+        index: number;
     }) => {
+        const subjectBg = getSubjectColor(subjectName || "");
+        const emoji = getChapterEmoji(index);
+
         return (
             <Pressable
-                style={styles.chapterCard}
+                style={({ pressed }) => [
+                    styles.chapterCard,
+                    pressed && styles.chapterCardPressed,
+                ]}
                 onPress={() =>
                     handleChapterPress(item._id)
                 }
             >
-                <View
-                    style={styles.chapterNumberContainer}
-                >
-                    <Text
-                        style={styles.chapterNumber}
-                    >
-                        {item.chapterNumber}
-                    </Text>
+                <View style={styles.chapterLeft}>
+                    <View style={[styles.chapterNumberContainer, { backgroundColor: subjectBg }]}>
+                        <Text style={styles.chapterNumberEmoji}>
+                            {emoji}
+                        </Text>
+                    </View>
+
+                    <View style={styles.chapterBadgeCol}>
+                        <View style={styles.chapterNumBadge}>
+                            <Text style={styles.chapterNumBadgeText}>
+                                Ch. {item.chapterNumber}
+                            </Text>
+                        </View>
+                        <Text style={styles.chapterName}>
+                            {item.name}
+                        </Text>
+                        <Text style={styles.chapterSubtitle}>
+                            Open chapter details →
+                        </Text>
+                    </View>
                 </View>
 
-                <View style={styles.chapterInfo}>
-                    <Text
-                        style={styles.chapterName}
-                    >
-                        {item.name}
-                    </Text>
-
-                    <Text
-                        style={styles.chapterSubtitle}
-                    >
-                        Open chapter
-                    </Text>
+                <View style={styles.chevronContainer}>
+                    <Text style={styles.chevron}>›</Text>
                 </View>
-
-                <Text style={styles.arrow}>
-                    ›
-                </Text>
             </Pressable>
         );
     };
 
     if (loading) {
         return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" />
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.centerContainer}>
+                    <View style={styles.loadingIconContainer}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                    </View>
 
-                <Text style={styles.loadingText}>
-                    Loading chapters...
-                </Text>
-            </View>
+                    <Text style={styles.loadingText}>
+                        Loading chapters...
+                    </Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
     if (error) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.errorTitle}>
-                    Something went wrong
-                </Text>
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.centerContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.errorLight }]}>
+                        <Text style={styles.errorIcon}>⚠</Text>
+                    </View>
 
-                <Text style={styles.errorText}>
-                    {error}
-                </Text>
-
-                <Pressable
-                    style={styles.retryButton}
-                    onPress={() => {
-                        void fetchChapters();
-                    }}
-                >
-                    <Text
-                        style={styles.retryButtonText}
-                    >
-                        Retry
+                    <Text style={styles.errorTitle}>
+                        Something went wrong
                     </Text>
-                </Pressable>
-            </View>
+
+                    <Text style={styles.errorText}>
+                        {error}
+                    </Text>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.retryButton,
+                            pressed && styles.buttonPressed,
+                        ]}
+                        onPress={() => {
+                            void fetchChapters();
+                        }}
+                    >
+                        <Text
+                            style={styles.retryButtonText}
+                        >
+                            Retry
+                        </Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
         );
     }
 
     if (chapters.length === 0) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.emptyTitle}>
-                    No chapters available
-                </Text>
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.centerContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.warningLight }]}>
+                        <Text style={styles.emptyIcon}>📭</Text>
+                    </View>
 
-                <Text style={styles.emptyText}>
-                    Chapters for this subject are
-                    not available yet.
-                </Text>
-            </View>
+                    <Text style={styles.emptyTitle}>
+                        No chapters available
+                    </Text>
+
+                    <Text style={styles.emptyText}>
+                        Chapters for this subject are
+                        not available yet.
+                    </Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
+    const subjectBg = getSubjectColor(subjectName || "");
+
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.classTitle}>
-                    Class {classNumber}
-                </Text>
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <View style={styles.container}>
+                <View style={styles.header}>
+                    <View style={styles.headerBreadcrumbs}>
+                        <View style={styles.crumbBadge}>
+                            <Text style={styles.crumbBadgeText}>
+                                Class {classNumber}
+                            </Text>
+                        </View>
+                        <Text style={styles.crumbSeparator}>›</Text>
+                        <View style={[styles.crumbBadge, styles.crumbBadgeActive, { backgroundColor: subjectBg }]}>
+                            <Text style={[styles.crumbBadgeText, styles.crumbBadgeActiveText]}>
+                                {subjectName}
+                            </Text>
+                        </View>
+                    </View>
 
-                <Text style={styles.title}>
-                    {subjectName}
-                </Text>
+                    <Text style={styles.title}>
+                        All Chapters
+                    </Text>
 
-                <Text style={styles.subtitle}>
-                    Choose a chapter to continue
-                    learning.
-                </Text>
+                    <Text style={styles.subtitle}>
+                        Select a chapter from {subjectName} to begin your learning journey.
+                    </Text>
+
+                    <View style={styles.countBadge}>
+                        <Text style={styles.countBadgeText}>
+                            {chapters.length} {chapters.length === 1 ? "chapter" : "chapters"} total
+                        </Text>
+                    </View>
+                </View>
+
+                <FlatList
+                    data={chapters}
+                    keyExtractor={(item) => item._id}
+                    renderItem={renderChapter}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={styles.list}
+                    ItemSeparatorComponent={() => <View style={{ height: spacing.lg }} />}
+                />
             </View>
-
-            <FlatList
-                data={chapters}
-                keyExtractor={(item) => item._id}
-                renderItem={renderChapter}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.list}
-            />
-        </View>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+
     container: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: spacing.xl,
     },
 
     header: {
-        paddingTop: 24,
-        paddingBottom: 20,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xl,
+    },
+
+    headerBreadcrumbs: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: spacing.lg,
+        flexWrap: "wrap",
+    },
+
+    crumbBadge: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        borderRadius: borderRadius.pill,
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+
+    crumbBadgeActive: {
+        borderWidth: 0,
+    },
+
+    crumbBadgeText: {
+        ...typography.captionSm,
+        color: colors.textSecondary,
+        fontWeight: "600",
+    },
+
+    crumbBadgeActiveText: {
+        color: colors.primary,
+    },
+
+    crumbSeparator: {
+        fontSize: 18,
+        color: colors.textMuted,
+        marginHorizontal: spacing.sm,
+        marginTop: -2,
     },
 
     classTitle: {
@@ -243,115 +344,205 @@ const styles = StyleSheet.create({
     },
 
     title: {
-        marginTop: 4,
-        fontSize: 28,
-        fontWeight: "700",
+        ...typography.h2,
+        color: colors.textPrimary,
+        letterSpacing: -0.5,
     },
 
     subtitle: {
-        marginTop: 8,
-        fontSize: 15,
-        lineHeight: 22,
+        marginTop: spacing.sm,
+        ...typography.body,
+        color: colors.textSecondary,
+    },
+
+    countBadge: {
+        alignSelf: "flex-start",
+        marginTop: spacing.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.primaryLight,
+    },
+
+    countBadgeText: {
+        color: colors.primary,
+        ...typography.captionSm,
+        fontWeight: "700",
     },
 
     list: {
-        paddingBottom: 24,
+        paddingBottom: spacing.xxl,
     },
 
     chapterCard: {
-        minHeight: 76,
-        marginBottom: 12,
-        paddingHorizontal: 16,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: "#dddddd",
+        ...shadows.md,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.lg,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.lg,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+
+    chapterCardPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.99 }],
+    },
+
+    chapterLeft: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
     },
 
     chapterNumberContainer: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: "#000000",
+        width: 52,
+        height: 52,
+        borderRadius: borderRadius.md,
         alignItems: "center",
         justifyContent: "center",
     },
 
-    chapterNumber: {
-        color: "#ffffff",
-        fontSize: 16,
+    chapterNumberEmoji: {
+        fontSize: 24,
+    },
+
+    chapterBadgeCol: {
+        flex: 1,
+        marginLeft: spacing.lg,
+    },
+
+    chapterNumBadge: {
+        alignSelf: "flex-start",
+        paddingHorizontal: spacing.sm,
+        paddingVertical: 3,
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.primaryLight,
+        marginBottom: spacing.xs,
+    },
+
+    chapterNumBadgeText: {
+        color: colors.primary,
+        ...typography.overline,
         fontWeight: "700",
     },
 
-    chapterInfo: {
-        flex: 1,
-        marginLeft: 14,
-    },
-
     chapterName: {
-        fontSize: 16,
-        fontWeight: "600",
+        ...typography.subtitle,
+        color: colors.textPrimary,
     },
 
     chapterSubtitle: {
-        marginTop: 4,
-        fontSize: 13,
+        marginTop: 3,
+        ...typography.caption,
+        color: colors.primary,
+        fontWeight: "600",
     },
 
-    arrow: {
-        fontSize: 28,
-        marginLeft: 8,
+    chevronContainer: {
+        width: 32,
+        height: 32,
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.primaryLight,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: spacing.md,
+    },
+
+    chevron: {
+        fontSize: 22,
+        color: colors.primary,
+        fontWeight: "700",
+        marginTop: -2,
+        marginLeft: 2,
     },
 
     centerContainer: {
         flex: 1,
-        paddingHorizontal: 24,
+        paddingHorizontal: spacing.xxl,
         alignItems: "center",
         justifyContent: "center",
     },
 
+    loadingIconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: borderRadius.lg,
+        backgroundColor: colors.primaryLight,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.lg,
+    },
+
+    iconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: borderRadius.lg,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.lg,
+    },
+
+    errorIcon: {
+        fontSize: 32,
+    },
+
+    emptyIcon: {
+        fontSize: 32,
+    },
+
     loadingText: {
-        marginTop: 12,
-        fontSize: 15,
+        marginTop: spacing.md,
+        ...typography.caption,
+        color: colors.textSecondary,
+        fontWeight: "500",
     },
 
     errorTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     errorText: {
-        marginTop: 8,
-        fontSize: 15,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         lineHeight: 22,
         textAlign: "center",
     },
 
     retryButton: {
-        marginTop: 24,
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 10,
-        backgroundColor: "#000000",
+        ...shadows.xl,
+        marginTop: spacing.xxl,
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: 16,
+        borderRadius: borderRadius.pill,
+        backgroundColor: colors.primary,
     },
 
     retryButtonText: {
-        color: "#ffffff",
-        fontSize: 15,
-        fontWeight: "600",
+        color: "#FFFFFF",
+        ...typography.subtitle,
+        fontWeight: "700",
+    },
+
+    buttonPressed: {
+        opacity: 0.9,
+        transform: [{ scale: 0.98 }],
     },
 
     emptyTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     emptyText: {
-        marginTop: 8,
-        fontSize: 15,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         lineHeight: 22,
         textAlign: "center",
     },

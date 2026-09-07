@@ -6,6 +6,7 @@ import {
     Text,
     View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 import {
     router,
@@ -20,6 +21,15 @@ import type {
     ChapterItem,
     ChapterResponse,
 } from "../../src/types/chapter";
+
+import {
+    colors,
+    shadows,
+    spacing,
+    borderRadius,
+    typography,
+    getSubjectColor,
+} from "../../src/constants/theme";
 
 export default function ChapterDetailsScreen() {
     const {
@@ -83,196 +93,340 @@ export default function ChapterDetailsScreen() {
 
     if (loading) {
         return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" />
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.centerContainer}>
+                    <View style={styles.loadingIconContainer}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                    </View>
 
-                <Text style={styles.loadingText}>
-                    Loading chapter...
-                </Text>
-            </View>
+                    <Text style={styles.loadingText}>
+                        Loading chapter...
+                    </Text>
+                </View>
+            </SafeAreaView>
         );
     }
 
     if (error) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.errorTitle}>
-                    Something went wrong
-                </Text>
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.centerContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.errorLight }]}>
+                        <Text style={styles.errorIcon}>⚠</Text>
+                    </View>
 
-                <Text style={styles.errorText}>
-                    {error}
-                </Text>
-
-                <Pressable
-                    style={styles.retryButton}
-                    onPress={() => {
-                        void fetchChapter();
-                    }}
-                >
-                    <Text
-                        style={styles.retryButtonText}
-                    >
-                        Retry
+                    <Text style={styles.errorTitle}>
+                        Something went wrong
                     </Text>
-                </Pressable>
 
-                <Pressable
-                    style={styles.backButton}
-                    onPress={() => router.back()}
-                >
-                    <Text
-                        style={styles.backButtonText}
-                    >
-                        Go Back
+                    <Text style={styles.errorText}>
+                        {error}
                     </Text>
-                </Pressable>
-            </View>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.retryButton,
+                            pressed && styles.buttonPressed,
+                        ]}
+                        onPress={() => {
+                            void fetchChapter();
+                        }}
+                    >
+                        <Text
+                            style={styles.retryButtonText}
+                        >
+                            Retry
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.backButton,
+                            pressed && styles.outlineButtonPressed,
+                        ]}
+                        onPress={() => router.back()}
+                    >
+                        <Text
+                            style={styles.backButtonText}
+                        >
+                            Go Back
+                        </Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
         );
     }
 
     if (!chapter) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.errorTitle}>
-                    Chapter not found
-                </Text>
+            <SafeAreaView style={styles.safeArea} edges={["top"]}>
+                <View style={styles.centerContainer}>
+                    <View style={[styles.iconContainer, { backgroundColor: colors.warningLight }]}>
+                        <Text style={styles.emptyIcon}>🔍</Text>
+                    </View>
 
-                <Text style={styles.errorText}>
-                    This chapter is no longer available.
-                </Text>
-
-                <Pressable
-                    style={styles.backButton}
-                    onPress={() => router.back()}
-                >
-                    <Text
-                        style={styles.backButtonText}
-                    >
-                        Go Back
+                    <Text style={styles.errorTitle}>
+                        Chapter not found
                     </Text>
-                </Pressable>
-            </View>
+
+                    <Text style={styles.errorText}>
+                        This chapter is no longer available.
+                    </Text>
+
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.backButton,
+                            pressed && styles.outlineButtonPressed,
+                        ]}
+                        onPress={() => router.back()}
+                    >
+                        <Text
+                            style={styles.backButtonText}
+                        >
+                            Go Back
+                        </Text>
+                    </Pressable>
+                </View>
+            </SafeAreaView>
         );
     }
 
+    const subjectBg = getSubjectColor(subjectName || "");
+
     return (
-        <ScrollView
-            style={styles.container}
-            contentContainerStyle={
-                styles.contentContainer
-            }
-            showsVerticalScrollIndicator={false}
-        >
-            <View style={styles.header}>
-                <Text style={styles.classText}>
-                    Class {classNumber}
-                </Text>
+        <SafeAreaView style={styles.safeArea} edges={["top"]}>
+            <ScrollView
+                style={styles.container}
+                contentContainerStyle={
+                    styles.contentContainer
+                }
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={styles.breadcrumbs}>
+                    <View style={styles.crumbBadge}>
+                        <Text style={styles.crumbBadgeText}>
+                            Class {classNumber}
+                        </Text>
+                    </View>
+                    <Text style={styles.crumbSeparator}>›</Text>
+                    <View style={[styles.crumbBadge, { backgroundColor: subjectBg }]}>
+                        <Text style={[styles.crumbBadgeText, { color: colors.primary }]}>
+                            {subjectName}
+                        </Text>
+                    </View>
+                </View>
 
-                <Text style={styles.subjectText}>
-                    {subjectName}
-                </Text>
-
-                <View
-                    style={styles.chapterNumberContainer}
-                >
-                    <Text
-                        style={styles.chapterNumber}
+                <View style={styles.header}>
+                    <View
+                        style={[styles.chapterNumberContainer, { backgroundColor: colors.primary }]}
                     >
-                        Chapter {chapter.chapterNumber}
+                        <Text
+                            style={styles.chapterNumber}
+                        >
+                            📖 Chapter {chapter.chapterNumber}
+                        </Text>
+                    </View>
+
+                    <Text style={styles.title}>
+                        {chapter.name}
                     </Text>
                 </View>
 
-                <Text style={styles.title}>
-                    {chapter.name}
-                </Text>
-            </View>
+                <View style={[styles.aboutCallout, { backgroundColor: colors.primaryLight }]}>
+                    <View style={styles.aboutIconRow}>
+                        <View style={styles.aboutIconBubble}>
+                            <Text style={styles.aboutIcon}>💡</Text>
+                        </View>
+                        <View style={styles.aboutHeaderTexts}>
+                            <Text style={styles.aboutLabel}>
+                                About this chapter
+                            </Text>
+                            <Text style={styles.aboutSubLabel}>
+                                Everything you need to master this topic
+                            </Text>
+                        </View>
+                    </View>
 
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>
-                    Learn This Chapter
-                </Text>
+                    <View style={styles.aboutDivider} />
 
-                <Text style={styles.sectionText}>
-                    Study notes, video lectures, and
-                    practice questions for this chapter
-                    will be available here.
-                </Text>
-            </View>
-
-            <View style={styles.options}>
-                <Pressable
-                    style={styles.optionCard}
-                    onPress={() => {
-                        console.log(
-                            "Notes selected:",
-                            chapter._id
-                        );
-                    }}
-                >
-                    <Text style={styles.optionTitle}>
-                        Notes
+                    <Text style={styles.aboutDescription}>
+                        This chapter covers the core concepts of{" "}
+                        <Text style={styles.aboutHighlight}>{chapter.name}</Text>. 
+                        Work through the detailed notes, watch the curated video 
+                        lectures, and test your knowledge with the practice 
+                        questions below to build a solid understanding.
                     </Text>
+                </View>
 
-                    <Text style={styles.optionText}>
-                        Read chapter notes and explanations.
-                    </Text>
-                </Pressable>
+                <View style={styles.optionsSection}>
+                    <View style={styles.sectionHeader}>
+                        <Text style={styles.sectionTitle}>
+                            Start Learning
+                        </Text>
+                        <Text style={styles.sectionSubtitle}>
+                            Choose how you want to study
+                        </Text>
+                    </View>
 
-                <Pressable
-                    style={styles.optionCard}
-                    onPress={() => {
-                        console.log(
-                            "Videos selected:",
-                            chapter._id
-                        );
-                    }}
-                >
-                    <Text style={styles.optionTitle}>
-                        Video Lectures
-                    </Text>
+                    <View style={styles.optionGrid}>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.optionCard,
+                                styles.optionCardNotes,
+                                pressed && styles.optionCardPressed,
+                            ]}
+                            onPress={() => {
+                                console.log(
+                                    "Notes selected:",
+                                    chapter._id
+                                );
+                            }}
+                        >
+                            <View style={[styles.optionIconWrap, { backgroundColor: colors.subjectMath }]}>
+                                <Text style={styles.optionEmoji}>📝</Text>
+                            </View>
 
-                    <Text style={styles.optionText}>
-                        Watch curated lectures for this
-                        chapter.
-                    </Text>
-                </Pressable>
+                            <Text style={styles.optionTitle}>
+                                Notes
+                            </Text>
 
-                <Pressable
-                    style={styles.optionCard}
-                    onPress={() => {
-                        console.log(
-                            "Questions selected:",
-                            chapter._id
-                        );
-                    }}
-                >
-                    <Text style={styles.optionTitle}>
-                        Practice Questions
-                    </Text>
+                            <Text style={styles.optionText}>
+                                Detailed explanations and chapter summaries.
+                            </Text>
 
-                    <Text style={styles.optionText}>
-                        Practice questions and test your
-                        understanding.
-                    </Text>
-                </Pressable>
-            </View>
-        </ScrollView>
+                            <View style={[styles.optionBadge, { backgroundColor: colors.primary }]}>
+                                <Text style={styles.optionBadgeText}>Read →</Text>
+                            </View>
+                        </Pressable>
+
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.optionCard,
+                                styles.optionCardVideo,
+                                pressed && styles.optionCardPressed,
+                            ]}
+                            onPress={() => {
+                                console.log(
+                                    "Videos selected:",
+                                    chapter._id
+                                );
+                            }}
+                        >
+                            <View style={[styles.optionIconWrap, { backgroundColor: colors.subjectScience }]}>
+                                <Text style={styles.optionEmoji}>🎬</Text>
+                            </View>
+
+                            <Text style={styles.optionTitle}>
+                                Video Lectures
+                            </Text>
+
+                            <Text style={styles.optionText}>
+                                Watch curated video lessons for this chapter.
+                            </Text>
+
+                            <View style={[styles.optionBadge, { backgroundColor: colors.success }]}>
+                                <Text style={styles.optionBadgeText}>Watch →</Text>
+                            </View>
+                        </Pressable>
+
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.optionCard,
+                                styles.optionCardQuestions,
+                                pressed && styles.optionCardPressed,
+                            ]}
+                            onPress={() => {
+                                console.log(
+                                    "Questions selected:",
+                                    chapter._id
+                                );
+                            }}
+                        >
+                            <View style={[styles.optionIconWrap, { backgroundColor: colors.subjectHistory }]}>
+                                <Text style={styles.optionEmoji}>❓</Text>
+                            </View>
+
+                            <Text style={styles.optionTitle}>
+                                Practice Questions
+                            </Text>
+
+                            <Text style={styles.optionText}>
+                                Test yourself with chapter questions.
+                            </Text>
+
+                            <View style={[styles.optionBadge, { backgroundColor: colors.warning }]}>
+                                <Text style={[styles.optionBadgeText, { color: colors.textPrimary }]}>Practice →</Text>
+                            </View>
+                        </Pressable>
+                    </View>
+                </View>
+
+                <View style={styles.tipBox}>
+                    <Text style={styles.tipEmoji}>✨</Text>
+                    <View style={styles.tipTextCol}>
+                        <Text style={styles.tipTitle}>
+                            Pro Tip
+                        </Text>
+                        <Text style={styles.tipBody}>
+                            Read the notes first, then watch the videos, 
+                            and finish with practice questions for the 
+                            best retention.
+                        </Text>
+                    </View>
+                </View>
+            </ScrollView>
+        </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
+    safeArea: {
+        flex: 1,
+        backgroundColor: colors.background,
+    },
+
     container: {
         flex: 1,
     },
 
     contentContainer: {
-        padding: 20,
-        paddingBottom: 40,
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.md,
+        paddingBottom: spacing.xxxl,
+    },
+
+    breadcrumbs: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: spacing.lg,
+        flexWrap: "wrap",
+    },
+
+    crumbBadge: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: 6,
+        borderRadius: borderRadius.pill,
+        backgroundColor: colors.card,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+
+    crumbBadgeText: {
+        ...typography.captionSm,
+        color: colors.textSecondary,
+        fontWeight: "600",
+    },
+
+    crumbSeparator: {
+        fontSize: 18,
+        color: colors.textMuted,
+        marginHorizontal: spacing.sm,
+        marginTop: -2,
     },
 
     header: {
-        paddingTop: 8,
+        paddingTop: spacing.sm,
+        marginBottom: spacing.xxl,
     },
 
     classText: {
@@ -287,114 +441,311 @@ const styles = StyleSheet.create({
 
     chapterNumberContainer: {
         alignSelf: "flex-start",
-        marginTop: 20,
-        paddingHorizontal: 12,
-        paddingVertical: 7,
-        borderRadius: 8,
-        backgroundColor: "#000000",
+        paddingHorizontal: spacing.lg,
+        paddingVertical: 10,
+        borderRadius: borderRadius.pill,
+        marginBottom: spacing.lg,
+        ...shadows.lg,
     },
 
     chapterNumber: {
-        color: "#ffffff",
-        fontSize: 13,
-        fontWeight: "600",
+        color: "#FFFFFF",
+        ...typography.caption,
+        fontWeight: "700",
+        letterSpacing: 0.2,
     },
 
     title: {
-        marginTop: 14,
-        fontSize: 30,
-        lineHeight: 38,
+        ...typography.h2,
+        color: colors.textPrimary,
+        lineHeight: 40,
+        letterSpacing: -0.5,
+    },
+
+    aboutCallout: {
+        borderRadius: borderRadius.lg,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.lg,
+        marginBottom: spacing.xxxl,
+    },
+
+    aboutIconRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+
+    aboutIconBubble: {
+        width: 44,
+        height: 44,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.card,
+        alignItems: "center",
+        justifyContent: "center",
+        ...shadows.sm,
+    },
+
+    aboutIcon: {
+        fontSize: 22,
+    },
+
+    aboutHeaderTexts: {
+        flex: 1,
+        marginLeft: spacing.md,
+    },
+
+    aboutLabel: {
+        ...typography.subtitle,
+        color: colors.primary,
+        fontWeight: "800",
+    },
+
+    aboutSubLabel: {
+        marginTop: 2,
+        ...typography.captionSm,
+        color: colors.textSecondary,
+        fontWeight: "500",
+    },
+
+    aboutDivider: {
+        height: 1,
+        backgroundColor: colors.primaryMuted,
+        marginVertical: spacing.md,
+    },
+
+    aboutDescription: {
+        ...typography.bodySm,
+        color: colors.textPrimary,
+        lineHeight: 24,
+        opacity: 0.9,
+    },
+
+    aboutHighlight: {
+        color: colors.primary,
         fontWeight: "700",
+    },
+
+    optionsSection: {
+        marginBottom: spacing.xxl,
+    },
+
+    sectionHeader: {
+        marginBottom: spacing.lg,
+    },
+
+    sectionTitle: {
+        ...typography.h3,
+        color: colors.textPrimary,
+        letterSpacing: -0.3,
+    },
+
+    sectionSubtitle: {
+        marginTop: spacing.xs,
+        ...typography.bodySm,
+        color: colors.textSecondary,
     },
 
     section: {
         marginTop: 32,
     },
 
-    sectionTitle: {
-        fontSize: 20,
-        fontWeight: "700",
-    },
-
-    sectionText: {
-        marginTop: 8,
-        fontSize: 15,
-        lineHeight: 23,
-    },
-
-    options: {
-        marginTop: 24,
+    optionGrid: {
+        gap: spacing.lg,
     },
 
     optionCard: {
-        marginBottom: 12,
-        padding: 18,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: "#dddddd",
+        ...shadows.md,
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.xl,
+        paddingHorizontal: spacing.lg,
+        paddingTop: spacing.lg,
+        paddingBottom: spacing.lg,
+    },
+
+    optionCardNotes: {
+        borderLeftWidth: 4,
+        borderLeftColor: colors.primary,
+    },
+
+    optionCardVideo: {
+        borderLeftWidth: 4,
+        borderLeftColor: colors.success,
+    },
+
+    optionCardQuestions: {
+        borderLeftWidth: 4,
+        borderLeftColor: colors.warning,
+    },
+
+    optionCardPressed: {
+        opacity: 0.9,
+        transform: [{ scale: 0.99 }],
+    },
+
+    optionIconWrap: {
+        width: 56,
+        height: 56,
+        borderRadius: borderRadius.md,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.md,
+    },
+
+    optionEmoji: {
+        fontSize: 28,
     },
 
     optionTitle: {
-        fontSize: 17,
-        fontWeight: "600",
+        ...typography.title,
+        color: colors.textPrimary,
+        marginBottom: spacing.xs,
     },
 
     optionText: {
-        marginTop: 6,
-        fontSize: 14,
-        lineHeight: 21,
+        ...typography.bodySm,
+        color: colors.textSecondary,
+        lineHeight: 22,
+        marginBottom: spacing.md,
+    },
+
+    optionBadge: {
+        alignSelf: "flex-start",
+        paddingHorizontal: spacing.md,
+        paddingVertical: 8,
+        borderRadius: borderRadius.pill,
+    },
+
+    optionBadgeText: {
+        color: "#FFFFFF",
+        ...typography.caption,
+        fontWeight: "700",
+    },
+
+    tipBox: {
+        flexDirection: "row",
+        alignItems: "flex-start",
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.lg,
+        borderRadius: borderRadius.lg,
+        backgroundColor: colors.warningLight,
+    },
+
+    tipEmoji: {
+        fontSize: 24,
+        marginRight: spacing.md,
+    },
+
+    tipTextCol: {
+        flex: 1,
+    },
+
+    tipTitle: {
+        ...typography.subtitle,
+        color: colors.textPrimary,
+        fontWeight: "800",
+        marginBottom: 2,
+    },
+
+    tipBody: {
+        ...typography.bodySm,
+        color: colors.textSecondary,
+        lineHeight: 22,
     },
 
     centerContainer: {
         flex: 1,
-        paddingHorizontal: 24,
+        paddingHorizontal: spacing.xxl,
         alignItems: "center",
         justifyContent: "center",
     },
 
+    loadingIconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: borderRadius.lg,
+        backgroundColor: colors.primaryLight,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.lg,
+    },
+
+    iconContainer: {
+        width: 72,
+        height: 72,
+        borderRadius: borderRadius.lg,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: spacing.lg,
+    },
+
+    errorIcon: {
+        fontSize: 32,
+    },
+
+    emptyIcon: {
+        fontSize: 32,
+    },
+
     loadingText: {
-        marginTop: 12,
-        fontSize: 15,
+        marginTop: spacing.md,
+        ...typography.caption,
+        color: colors.textSecondary,
+        fontWeight: "500",
     },
 
     errorTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     errorText: {
-        marginTop: 8,
-        fontSize: 15,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         lineHeight: 22,
         textAlign: "center",
     },
 
     retryButton: {
-        marginTop: 24,
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 10,
-        backgroundColor: "#000000",
+        ...shadows.xl,
+        marginTop: spacing.xxl,
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: 16,
+        borderRadius: borderRadius.pill,
+        backgroundColor: colors.primary,
     },
 
     retryButtonText: {
-        color: "#ffffff",
-        fontSize: 15,
-        fontWeight: "600",
+        color: "#FFFFFF",
+        ...typography.subtitle,
+        fontWeight: "700",
+    },
+
+    buttonPressed: {
+        opacity: 0.9,
+        transform: [{ scale: 0.98 }],
     },
 
     backButton: {
-        marginTop: 12,
-        paddingHorizontal: 28,
+        marginTop: spacing.md,
+        paddingHorizontal: spacing.xxxl,
         paddingVertical: 14,
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: "#dddddd",
+        borderRadius: borderRadius.pill,
+        borderWidth: 1.5,
+        borderColor: colors.border,
+        backgroundColor: colors.card,
+        ...shadows.sm,
     },
 
     backButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
+        ...typography.subtitle,
+        fontWeight: "700",
+        color: colors.textPrimary,
+    },
+
+    outlineButtonPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.99 }],
+        backgroundColor: colors.background,
     },
 });
