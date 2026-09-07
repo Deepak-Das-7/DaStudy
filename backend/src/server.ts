@@ -1,5 +1,10 @@
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import { connectDatabase } from "./config/db";
+import classRoutes from "./routes/classRoutes";
+
+dotenv.config();
 
 const app = express();
 
@@ -9,15 +14,18 @@ app.use(express.json());
 app.get("/", (_req, res) => {
     res.json({
         success: true,
-        message: "Study App API is running",
+        message: "DaStudy API is running",
     });
 });
+app.use("/api/classes", classRoutes);
+const PORT = Number(process.env.PORT) || 5000;
 
-app.use((req, res) => {
-    res.status(404).json({ success: false, message: `Route not found: ${req.path}` });
-});
-const PORT = 5000;
+const startServer = async (): Promise<void> => {
+    await connectDatabase();
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-});
+    app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+    });
+};
+
+startServer();
