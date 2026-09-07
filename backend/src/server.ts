@@ -4,6 +4,7 @@ import cors from "cors";
 import { connectDatabase } from "./config/db";
 import classRoutes from "./routes/classRoutes";
 import subjectRoutes from "./routes/subjectRoutes";
+import chapterRoutes from "./routes/chapterRoutes";
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ app.get("/", (_req, res) => {
 });
 app.use("/api/classes", classRoutes);
 app.use("/api/subjects", subjectRoutes);
+app.use("/api/chapters", chapterRoutes);
 
 const PORT = Number(process.env.PORT) || 5000;
 
