@@ -1,20 +1,38 @@
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { router } from "expo-router";
 
 export default function HomeScreen() {
+    const handleStartStudying = () => {
+        router.push("/classes");
+    };
+
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Study App</Text>
-            <Text style={styles.subtitle}>
-                Learn. Practice. Grow.
-            </Text>
+            <View style={styles.content}>
+                <Text style={styles.appName}>DaStudy</Text>
 
-            <Pressable
-                style={styles.button}
-                onPress={() => router.push("/classes")}
-            >
-                <Text style={styles.buttonText}>Start Studying</Text>
-            </Pressable>
+                <Text style={styles.title}>
+                    Learn. Practice. Grow.
+                </Text>
+
+                <Text style={styles.description}>
+                    Study school subjects, read notes, watch lectures,
+                    and practice questions — all in one place.
+                </Text>
+
+                <Pressable
+                    style={styles.button}
+                    onPress={handleStartStudying}
+                >
+                    <Text style={styles.buttonText}>
+                        Start Studying
+                    </Text>
+                </Pressable>
+            </View>
+
+            <Text style={styles.footer}>
+                Free & Open Source
+            </Text>
         </View>
     );
 }
@@ -22,32 +40,50 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
         padding: 24,
+        justifyContent: "space-between",
+    },
+
+    content: {
+        flex: 1,
+        justifyContent: "center",
+    },
+
+    appName: {
+        fontSize: 18,
+        fontWeight: "700",
+        marginBottom: 24,
     },
 
     title: {
-        fontSize: 32,
+        fontSize: 34,
         fontWeight: "700",
+        lineHeight: 42,
     },
 
-    subtitle: {
-        marginTop: 8,
+    description: {
+        marginTop: 16,
         fontSize: 16,
+        lineHeight: 24,
     },
 
     button: {
         marginTop: 32,
-        paddingVertical: 14,
-        paddingHorizontal: 28,
-        borderRadius: 8,
-        backgroundColor: "#000",
+        paddingVertical: 16,
+        borderRadius: 10,
+        alignItems: "center",
+        backgroundColor: "#000000",
     },
 
     buttonText: {
-        color: "#fff",
+        color: "#ffffff",
         fontSize: 16,
         fontWeight: "600",
+    },
+
+    footer: {
+        textAlign: "center",
+        fontSize: 13,
+        marginBottom: 8,
     },
 });
