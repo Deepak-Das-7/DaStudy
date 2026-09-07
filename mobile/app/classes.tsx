@@ -1,4 +1,5 @@
 import {
+    ActivityIndicator,
     FlatList,
     Pressable,
     StyleSheet,
@@ -6,64 +7,43 @@ import {
     View,
 } from "react-native";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 
-type ClassItem = {
-    id: number;
-    name: string;
-};
-
-const classes: ClassItem[] = [
-    {
-        id: 1,
-        name: "Class 1",
-    },
-    {
-        id: 2,
-        name: "Class 2",
-    },
-    {
-        id: 3,
-        name: "Class 3",
-    },
-    {
-        id: 4,
-        name: "Class 4",
-    },
-    {
-        id: 5,
-        name: "Class 5",
-    },
-    {
-        id: 6,
-        name: "Class 6",
-    },
-    {
-        id: 7,
-        name: "Class 7",
-    },
-    {
-        id: 8,
-        name: "Class 8",
-    },
-    {
-        id: 9,
-        name: "Class 9",
-    },
-    {
-        id: 10,
-        name: "Class 10",
-    },
-    {
-        id: 11,
-        name: "Class 11",
-    },
-    {
-        id: 12,
-        name: "Class 12",
-    },
-];
+import { api } from "../src/services/api";
+import type {
+    ClassItem,
+    ClassesResponse,
+} from "../src/types/class";
 
 export default function ClassesScreen() {
+    const [classes, setClasses] = useState<ClassItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const fetchClasses = async (): Promise<void> => {
+        try {
+            setLoading(true);
+            setError("");
+
+            const response =
+                await api.get<ClassesResponse>("/classes");
+
+            setClasses(response.data.data);
+        } catch (error) {
+            console.error("Failed to fetch classes:", error);
+
+            setError(
+                "Unable to load classes. Please check your internet connection."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        void fetchClasses();
+    }, []);
+
     const handleClassPress = (classNumber: number) => {
         router.push({
             pathname: "/subjects",
@@ -73,15 +53,19 @@ export default function ClassesScreen() {
         });
     };
 
-    const renderClass = ({ item }: { item: ClassItem }) => {
+    const renderClass = ({
+        item,
+    }: {
+        item: ClassItem;
+    }) => {
         return (
             <Pressable
                 style={styles.classCard}
-                onPress={() => handleClassPress(item.id)}
+                onPress={() => handleClassPress(item.classNumber)}
             >
                 <View style={styles.classNumberContainer}>
                     <Text style={styles.classNumber}>
-                        {item.id}
+                        {item.classNumber}
                     </Text>
                 </View>
 
@@ -95,12 +79,47 @@ export default function ClassesScreen() {
                     </Text>
                 </View>
 
-                <Text style={styles.arrow}>
-                    ›
-                </Text>
+                <Text style={styles.arrow}>›</Text>
             </Pressable>
         );
     };
+
+    if (loading) {
+        return (
+            <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" />
+
+                <Text style={styles.loadingText}>
+                    Loading classes...
+                </Text>
+            </View>
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorTitle}>
+                    Something went wrong
+                </Text>
+
+                <Text style={styles.errorText}>
+                    {error}
+                </Text>
+
+                <Pressable
+                    style={styles.retryButton}
+                    onPress={() => {
+                        void fetchClasses();
+                    }}
+                >
+                    <Text style={styles.retryButtonText}>
+                        Retry
+                    </Text>
+                </Pressable>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -116,7 +135,7 @@ export default function ClassesScreen() {
 
             <FlatList
                 data={classes}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item._id}
                 renderItem={renderClass}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.list}
@@ -129,6 +148,13 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         paddingHorizontal: 20,
+    },
+
+    centerContainer: {
+        flex: 1,
+        paddingHorizontal: 24,
+        alignItems: "center",
+        justifyContent: "center",
     },
 
     header: {
@@ -195,5 +221,37 @@ const styles = StyleSheet.create({
     arrow: {
         fontSize: 28,
         marginLeft: 8,
+    },
+
+    loadingText: {
+        marginTop: 12,
+        fontSize: 15,
+    },
+
+    errorTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+        textAlign: "center",
+    },
+
+    errorText: {
+        marginTop: 8,
+        fontSize: 14,
+        lineHeight: 21,
+        textAlign: "center",
+    },
+
+    retryButton: {
+        marginTop: 20,
+        paddingHorizontal: 24,
+        paddingVertical: 12,
+        borderRadius: 8,
+        backgroundColor: "#000000",
+    },
+
+    retryButtonText: {
+        color: "#ffffff",
+        fontSize: 15,
+        fontWeight: "600",
     },
 });
