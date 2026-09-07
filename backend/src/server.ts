@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { connectDatabase } from "./config/db";
 import classRoutes from "./routes/classRoutes";
+import subjectRoutes from "./routes/subjectRoutes";
 
 dotenv.config();
 
@@ -18,6 +19,8 @@ app.get("/", (_req, res) => {
     });
 });
 app.use("/api/classes", classRoutes);
+app.use("/api/subjects", subjectRoutes);
+
 const PORT = Number(process.env.PORT) || 5000;
 
 const startServer = async (): Promise<void> => {
