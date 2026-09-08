@@ -7,11 +7,13 @@ import ClassModel from "../models/Class";
 import SubjectModel from "../models/Subject";
 import ChapterModel from "../models/Chapter";
 import NoteModel from "../models/Note";
+import VideoModel from "../models/Video";
 
 import { classData } from "./data/classData";
 import { subjectData } from "./data/subjectData";
 import { chapterData } from "./data/chapterData";
 import { noteData } from "./data/noteData";
+import { videoData } from "./data/videoData";
 
 dotenv.config();
 
@@ -27,6 +29,7 @@ const seedDatabase = async (): Promise<void> => {
         await ChapterModel.deleteMany({});
         await SubjectModel.deleteMany({});
         await ClassModel.deleteMany({});
+        await VideoModel.deleteMany({});
 
         console.log("Seeding classes...");
 
@@ -172,6 +175,70 @@ const seedDatabase = async (): Promise<void> => {
         console.log(
             `${noteDocuments.length} notes seeded successfully`
         );
+
+        console.log("Seeding videos...");
+
+        const videoDocuments = [];
+
+        for (const videoGroup of videoData) {
+            const classItem = classes.find(
+                (item) => item.classNumber === videoGroup.classNumber
+            );
+
+            if (!classItem) {
+                console.warn(
+                    `Class ${videoGroup.classNumber} not found. Skipping videos.`
+                );
+
+                continue;
+            }
+
+            const subject = subjects.find(
+                (item) =>
+                    item.classId.toString() === classItem._id.toString() &&
+                    item.slug === videoGroup.subjectSlug
+            );
+
+            if (!subject) {
+                console.warn(
+                    `Subject ${videoGroup.subjectSlug} not found for Class ${videoGroup.classNumber}.`
+                );
+
+                continue;
+            }
+
+            const chapter = await ChapterModel.findOne({
+                subjectId: subject._id,
+                slug: videoGroup.chapterSlug,
+            });
+
+            if (!chapter) {
+                console.warn(
+                    `Chapter ${videoGroup.chapterSlug} not found. Skipping videos.`
+                );
+
+                continue;
+            }
+
+            for (const video of videoGroup.videos) {
+                videoDocuments.push({
+                    chapterId: chapter._id,
+                    title: video.title,
+                    youtubeVideoId: video.youtubeVideoId,
+                    channelName: video.channelName,
+                    language: video.language,
+                });
+            }
+        }
+
+        if (videoDocuments.length > 0) {
+            await VideoModel.insertMany(videoDocuments);
+        }
+
+        console.log(
+            `${videoDocuments.length} videos seeded successfully`
+        );
+
         console.log("");
         console.log("Database seed completed successfully.");
         console.log("");
@@ -181,6 +248,7 @@ const seedDatabase = async (): Promise<void> => {
         console.log(`Subjects: ${subjects.length}`);
         console.log(`Chapters: ${chapterDocuments.length}`);
         console.log(`Notes: ${noteDocuments.length}`);
+        console.log(`Videos: ${videoDocuments.length}`);
 
         await mongoose.connection.close();
 

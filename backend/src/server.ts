@@ -8,6 +8,7 @@ import classRoutes from "./routes/classRoutes";
 import subjectRoutes from "./routes/subjectRoutes";
 import chapterRoutes from "./routes/chapterRoutes";
 import noteRoutes from "./routes/noteRoutes";
+import videoRoutes from "./routes/videoRoutes";
 
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -35,13 +36,10 @@ app.get("/health", (_req, res) => {
 });
 
 app.use("/api/classes", classRoutes);
-
 app.use("/api/subjects", subjectRoutes);
-
 app.use("/api/chapters", chapterRoutes);
-
 app.use("/api/notes", noteRoutes);
-
+app.use("/api/videos", videoRoutes);
 
 app.use(notFound);
 
