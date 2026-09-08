@@ -8,12 +8,14 @@ import SubjectModel from "../models/Subject";
 import ChapterModel from "../models/Chapter";
 import NoteModel from "../models/Note";
 import VideoModel from "../models/Video";
+import QuestionModel from "../models/Question";
 
 import { classData } from "./data/classData";
 import { subjectData } from "./data/subjectData";
 import { chapterData } from "./data/chapterData";
 import { noteData } from "./data/noteData";
 import { videoData } from "./data/videoData";
+import { questionData } from "./data/questionData";
 
 dotenv.config();
 
@@ -30,6 +32,7 @@ const seedDatabase = async (): Promise<void> => {
         await SubjectModel.deleteMany({});
         await ClassModel.deleteMany({});
         await VideoModel.deleteMany({});
+        await QuestionModel.deleteMany({});
 
         console.log("Seeding classes...");
 
@@ -238,7 +241,73 @@ const seedDatabase = async (): Promise<void> => {
         console.log(
             `${videoDocuments.length} videos seeded successfully`
         );
+        console.log("Seeding questions...");
 
+        const questionDocuments = [];
+
+        for (const questionGroup of questionData) {
+            const classItem = classes.find(
+                (item) =>
+                    item.classNumber === questionGroup.classNumber
+            );
+
+            if (!classItem) {
+                console.warn(
+                    `Class ${questionGroup.classNumber} not found. Skipping questions.`
+                );
+
+                continue;
+            }
+
+            const subject = subjects.find(
+                (item) =>
+                    item.classId.toString() ===
+                    classItem._id.toString() &&
+                    item.slug === questionGroup.subjectSlug
+            );
+
+            if (!subject) {
+                console.warn(
+                    `Subject ${questionGroup.subjectSlug} not found for Class ${questionGroup.classNumber}.`
+                );
+
+                continue;
+            }
+
+            const chapter = await ChapterModel.findOne({
+                subjectId: subject._id,
+                slug: questionGroup.chapterSlug,
+            });
+
+            if (!chapter) {
+                console.warn(
+                    `Chapter ${questionGroup.chapterSlug} not found. Skipping questions.`
+                );
+
+                continue;
+            }
+
+            for (const question of questionGroup.questions) {
+                questionDocuments.push({
+                    chapterId: chapter._id,
+                    question: question.question,
+                    options: question.options,
+                    correctAnswer: question.correctAnswer,
+                    explanation: question.explanation,
+                });
+            }
+        }
+
+        if (questionDocuments.length > 0) {
+            await QuestionModel.insertMany(
+                questionDocuments
+            );
+        }
+
+        console.log(
+            `${questionDocuments.length} questions seeded successfully`
+        );
+        //===========================================================
         console.log("");
         console.log("Database seed completed successfully.");
         console.log("");
@@ -249,6 +318,7 @@ const seedDatabase = async (): Promise<void> => {
         console.log(`Chapters: ${chapterDocuments.length}`);
         console.log(`Notes: ${noteDocuments.length}`);
         console.log(`Videos: ${videoDocuments.length}`);
+        console.log(`Questions: ${questionDocuments.length}`);
 
         await mongoose.connection.close();
 
