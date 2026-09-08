@@ -330,7 +330,19 @@ export default function ChapterDetailsScreen() {
                             badgeColor={colors.success}
                             borderColor={colors.success}
                             iconBg={colors.subjectScience}
-                            onPress={() => console.log("Videos selected:", chapter._id)}
+                            onPress={() => {
+                                router.push({
+                                    pathname: "/chapter/videos",
+                                    params: {
+                                        chapterId: chapter._id,
+                                        chapterNumber:
+                                            chapter.chapterNumber.toString(),
+                                        chapterName: chapter.name,
+                                        classNumber: classNumber ?? "",
+                                        subjectName: subjectName ?? "",
+                                    },
+                                });
+                            }}
                             index={1}
                         />
                         <OptionCard

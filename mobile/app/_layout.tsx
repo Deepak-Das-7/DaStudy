@@ -67,6 +67,12 @@ export default function RootLayout() {
                         title: "Notes",
                     }}
                 />
+                <Stack.Screen
+                    name="chapter/videos"
+                    options={{
+                        title: "Video Lectures",
+                    }}
+                />
             </Stack>
         </SafeAreaProvider>
     );
