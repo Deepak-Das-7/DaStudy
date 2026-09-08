@@ -61,6 +61,12 @@ export default function RootLayout() {
                         title: "Chapter Details",
                     }}
                 />
+                <Stack.Screen
+                    name="chapter/notes"
+                    options={{
+                        title: "Notes",
+                    }}
+                />
             </Stack>
         </SafeAreaProvider>
     );

@@ -307,7 +307,19 @@ export default function ChapterDetailsScreen() {
                             badgeColor={colors.primary}
                             borderColor={colors.primary}
                             iconBg={colors.subjectMath}
-                            onPress={() => console.log("Notes selected:", chapter._id)}
+                            onPress={() => {
+                                router.push({
+                                    pathname: "/chapter/notes",
+                                    params: {
+                                        chapterId: chapter._id,
+                                        chapterNumber:
+                                            chapter.chapterNumber.toString(),
+                                        chapterName: chapter.name,
+                                        classNumber: classNumber ?? "",
+                                        subjectName: subjectName ?? "",
+                                    },
+                                });
+                            }}
                             index={0}
                         />
                         <OptionCard
