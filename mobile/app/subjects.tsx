@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
     title: {
         ...typography.h2,
         color: colors.textPrimary,
-        letterSpacing: -0.5,
+        letterSpacing: 0,
     },
     subtitle: {
         ...typography.bodySm,

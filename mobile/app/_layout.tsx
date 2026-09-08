@@ -1,6 +1,7 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { colors, typography } from "../src/constants/theme";
 
 export default function RootLayout() {
     return (
@@ -8,22 +9,19 @@ export default function RootLayout() {
             <StatusBar style="dark" />
             <Stack
                 screenOptions={{
-                    headerStyle: {
-                        backgroundColor: "#F8FAFC",
-                    },
+                    headerStyle: { backgroundColor: colors.background },
                     headerShadowVisible: false,
-                    headerTintColor: "#4F46E5",
+                    headerTintColor: colors.primary,
                     headerTitleStyle: {
-                        fontWeight: "700",
-                        fontSize: 17,
-                        color: "#1E293B",
+                        ...typography.subtitle,
+                        color: colors.textPrimary,
                     },
                     headerBackTitle: " ",
                     headerBackButtonDisplayMode: "minimal",
                     headerTitleAlign: "left",
                     headerTransparent: false,
                     contentStyle: {
-                        backgroundColor: "#F8FAFC",
+                        backgroundColor: colors.background,
                     },
                 }}
             >

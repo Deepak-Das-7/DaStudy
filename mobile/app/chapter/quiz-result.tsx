@@ -9,6 +9,7 @@ import {
     router,
     useLocalSearchParams,
 } from "expo-router";
+import { borderRadius, colors, shadows, spacing, typography } from "../../src/constants/theme";
 
 export default function QuizResultScreen() {
     const {
@@ -186,119 +187,125 @@ export default function QuizResultScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
 
     content: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: spacing.xl,
         justifyContent: "center",
     },
 
     title: {
-        fontSize: 32,
-        lineHeight: 40,
-        fontWeight: "700",
+        ...typography.h1,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     chapterName: {
-        marginTop: 10,
-        fontSize: 19,
-        lineHeight: 27,
-        fontWeight: "600",
+        marginTop: spacing.sm,
+        ...typography.subtitle,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     subtitle: {
-        marginTop: 6,
-        fontSize: 14,
+        marginTop: spacing.xs,
+        ...typography.caption,
+        color: colors.textSecondary,
         textAlign: "center",
     },
 
     scoreCard: {
-        marginTop: 30,
-        padding: 24,
+        ...shadows.md,
+        marginTop: spacing.xxxl,
+        padding: spacing.xxl,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 16,
+        borderColor: colors.primaryMuted,
+        borderRadius: borderRadius.lg,
         alignItems: "center",
     },
 
     scoreLabel: {
-        fontSize: 14,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.textSecondary,
     },
 
     score: {
-        marginTop: 10,
-        fontSize: 42,
-        lineHeight: 50,
-        fontWeight: "700",
+        marginTop: spacing.sm,
+        fontSize: 40,
+        lineHeight: 48,
+        fontWeight: "800",
+        color: colors.primary,
     },
 
     percentage: {
-        marginTop: 4,
-        fontSize: 22,
-        fontWeight: "600",
+        marginTop: spacing.xs,
+        ...typography.title,
+        color: colors.textPrimary,
     },
 
     message: {
-        marginTop: 14,
-        fontSize: 15,
-        lineHeight: 22,
+        marginTop: spacing.md,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         textAlign: "center",
     },
 
     statsContainer: {
-        marginTop: 16,
+        marginTop: spacing.md,
         flexDirection: "row",
-        gap: 10,
+        gap: spacing.sm,
     },
 
     statCard: {
         flex: 1,
-        paddingVertical: 18,
+        paddingVertical: spacing.md,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 12,
+        borderColor: colors.border,
+        borderRadius: borderRadius.md,
         alignItems: "center",
     },
 
     statValue: {
-        fontSize: 22,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.primary,
     },
 
     statLabel: {
-        marginTop: 5,
-        fontSize: 12,
+        marginTop: spacing.xs,
+        ...typography.overline,
+        color: colors.textSecondary,
     },
 
     primaryButton: {
-        marginTop: 24,
-        paddingVertical: 15,
-        borderRadius: 10,
+        marginTop: spacing.xxl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
         alignItems: "center",
-        backgroundColor: "#000000",
+        backgroundColor: colors.primary,
     },
 
     primaryButtonText: {
-        color: "#ffffff",
-        fontSize: 15,
-        fontWeight: "600",
+        color: colors.card,
+        ...typography.caption,
+        fontWeight: "700",
     },
 
     secondaryButton: {
-        marginTop: 12,
-        paddingVertical: 15,
-        borderRadius: 10,
+        marginTop: spacing.md,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
         alignItems: "center",
         borderWidth: 1,
-        borderColor: "#dddddd",
+        borderColor: colors.border,
     },
 
     secondaryButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.textPrimary,
+        fontWeight: "700",
     },
 });

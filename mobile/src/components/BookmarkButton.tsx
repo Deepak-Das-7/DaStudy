@@ -3,6 +3,7 @@ import {
     StyleSheet,
     Text,
 } from "react-native";
+import { borderRadius, colors, spacing, typography } from "../constants/theme";
 
 type BookmarkButtonProps = {
     bookmarked: boolean;
@@ -33,24 +34,27 @@ export default function BookmarkButton({
 
 const styles = StyleSheet.create({
     button: {
-        marginTop: 20,
-        paddingVertical: 14,
-        paddingHorizontal: 16,
+        marginTop: spacing.lg,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 10,
+        borderColor: colors.primaryMuted,
+        borderRadius: borderRadius.md,
         alignItems: "center",
         flexDirection: "row",
         justifyContent: "center",
-        gap: 8,
+        gap: spacing.sm,
+        backgroundColor: colors.card,
     },
 
     icon: {
-        fontSize: 20,
+        fontSize: 18,
+        color: colors.primary,
     },
 
     text: {
-        fontSize: 15,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.primary,
+        fontWeight: "700",
     },
 });

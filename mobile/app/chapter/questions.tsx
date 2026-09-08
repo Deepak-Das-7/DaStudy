@@ -21,6 +21,7 @@ import type {
     QuestionsResponse,
 } from "../../src/types/question";
 import { API_ENDPOINTS } from "../../src/constants/api";
+import { borderRadius, colors, spacing, typography } from "../../src/constants/theme";
 
 export default function QuestionsScreen() {
     const {
@@ -541,44 +542,46 @@ export default function QuestionsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
 
     contentContainer: {
-        paddingHorizontal: 20,
-        paddingBottom: 40,
+        paddingHorizontal: spacing.xl,
+        paddingBottom: spacing.xxxl,
     },
 
     header: {
-        paddingTop: 24,
-        paddingBottom: 20,
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.xxl,
     },
 
     classText: {
-        fontSize: 13,
-        fontWeight: "600",
+        ...typography.overline,
+        color: colors.primary,
     },
 
     subjectText: {
-        marginTop: 4,
-        fontSize: 15,
+        marginTop: spacing.xs,
+        ...typography.bodySm,
+        color: colors.textSecondary,
     },
 
     chapterText: {
-        marginTop: 18,
-        fontSize: 13,
-        fontWeight: "600",
+        marginTop: spacing.lg,
+        ...typography.overline,
+        color: colors.textSecondary,
     },
 
     chapterName: {
-        marginTop: 5,
-        fontSize: 28,
-        lineHeight: 36,
-        fontWeight: "700",
+        marginTop: spacing.xs,
+        ...typography.h2,
+        color: colors.textPrimary,
     },
 
     questionCount: {
-        marginTop: 10,
-        fontSize: 14,
+        marginTop: spacing.sm,
+        ...typography.caption,
+        color: colors.textSecondary,
     },
 
     progressSection: {
@@ -592,13 +595,13 @@ const styles = StyleSheet.create({
     },
 
     progressText: {
-        fontSize: 14,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.textPrimary,
     },
 
     scoreText: {
-        fontSize: 14,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.primary,
     },
 
     progressTrack: {
@@ -606,25 +609,26 @@ const styles = StyleSheet.create({
         marginTop: 10,
         borderRadius: 4,
         overflow: "hidden",
-        backgroundColor: "#eeeeee",
+        backgroundColor: colors.border,
     },
 
     progressFill: {
         height: 8,
         borderRadius: 4,
-        backgroundColor: "#000000",
+        backgroundColor: colors.primary,
     },
 
     questionCard: {
-        padding: 18,
+        padding: spacing.lg,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 14,
+        borderColor: colors.border,
+        borderRadius: borderRadius.md,
     },
 
     questionNumber: {
-        fontSize: 13,
-        fontWeight: "600",
+        ...typography.overline,
+        color: colors.primary,
     },
     lastQuestionSection: {
         marginTop: 20,
@@ -646,8 +650,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 10,
+        borderColor: colors.border,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.card,
         flexDirection: "row",
         alignItems: "center",
     },
@@ -657,8 +662,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderWidth: 2,
-        borderColor: "#000000",
-        borderRadius: 10,
+        borderColor: colors.primary,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.primaryLight,
         flexDirection: "row",
         alignItems: "center",
     },
@@ -668,8 +674,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderWidth: 2,
-        borderColor: "#000000",
-        borderRadius: 10,
+        borderColor: colors.success,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.successLight,
         flexDirection: "row",
         alignItems: "center",
     },
@@ -679,8 +686,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         borderWidth: 2,
-        borderColor: "#888888",
-        borderRadius: 10,
+        borderColor: colors.error,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.errorLight,
         flexDirection: "row",
         alignItems: "center",
     },
@@ -692,7 +700,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 1,
-        borderColor: "#dddddd",
+        borderColor: colors.border,
     },
 
     selectedOptionNumber: {
@@ -702,7 +710,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 2,
-        borderColor: "#000000",
+        borderColor: colors.primary,
     },
 
     correctOptionNumber: {
@@ -712,7 +720,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 2,
-        borderColor: "#000000",
+        borderColor: colors.success,
     },
 
     incorrectOptionNumber: {
@@ -722,34 +730,35 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         borderWidth: 2,
-        borderColor: "#888888",
+        borderColor: colors.error,
     },
 
     optionNumberText: {
-        fontSize: 13,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.textPrimary,
+        fontWeight: "700",
     },
 
     optionText: {
         flex: 1,
-        marginLeft: 12,
-        fontSize: 15,
-        lineHeight: 21,
+        marginLeft: spacing.md,
+        ...typography.bodySm,
+        color: colors.textPrimary,
     },
 
     primaryButton: {
-        marginTop: 20,
-        paddingHorizontal: 28,
-        paddingVertical: 15,
-        borderRadius: 10,
+        marginTop: spacing.xl,
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
         alignItems: "center",
-        backgroundColor: "#000000",
+        backgroundColor: colors.primary,
     },
 
     primaryButtonText: {
-        color: "#ffffff",
-        fontSize: 15,
-        fontWeight: "600",
+        color: colors.card,
+        ...typography.caption,
+        fontWeight: "700",
     },
 
     disabledButton: {
@@ -757,109 +766,116 @@ const styles = StyleSheet.create({
     },
 
     resultCard: {
-        marginTop: 20,
-        padding: 18,
+        marginTop: spacing.xl,
+        padding: spacing.lg,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 14,
+        borderColor: colors.border,
+        borderRadius: borderRadius.md,
     },
 
     correctTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.success,
     },
 
     incorrectTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.error,
     },
 
     correctAnswerText: {
-        marginTop: 10,
-        fontSize: 15,
-        fontWeight: "600",
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textPrimary,
+        fontWeight: "700",
     },
 
     explanationTitle: {
-        marginTop: 18,
-        fontSize: 15,
+        marginTop: spacing.lg,
+        ...typography.caption,
+        color: colors.textPrimary,
         fontWeight: "700",
     },
 
     explanationText: {
-        marginTop: 8,
-        fontSize: 15,
-        lineHeight: 23,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
     },
 
     lastQuestionMessage: {
-        marginTop: 20,
-        padding: 18,
+        marginTop: spacing.xl,
+        padding: spacing.lg,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 14,
+        borderColor: colors.border,
+        borderRadius: borderRadius.md,
         alignItems: "center",
     },
 
     lastQuestionText: {
-        fontSize: 15,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         textAlign: "center",
     },
 
     lastQuestionScore: {
-        marginTop: 8,
-        fontSize: 17,
-        fontWeight: "700",
+        marginTop: spacing.sm,
+        ...typography.subtitle,
+        color: colors.primary,
     },
 
     centerContainer: {
         flex: 1,
-        paddingHorizontal: 24,
+        paddingHorizontal: spacing.xxl,
         alignItems: "center",
         justifyContent: "center",
     },
 
     loadingText: {
-        marginTop: 12,
-        fontSize: 15,
+        marginTop: spacing.md,
+        ...typography.bodySm,
+        color: colors.textSecondary,
     },
 
     errorTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     errorText: {
-        marginTop: 8,
-        fontSize: 15,
-        lineHeight: 22,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         textAlign: "center",
     },
     secondaryButton: {
-        marginTop: 12,
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 10,
+        marginTop: spacing.md,
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
-        borderColor: "#dddddd",
+        borderColor: colors.border,
     },
 
     secondaryButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.textPrimary,
+        fontWeight: "700",
     },
 
     emptyTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     emptyText: {
-        marginTop: 8,
-        fontSize: 15,
-        lineHeight: 22,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         textAlign: "center",
     },
 });

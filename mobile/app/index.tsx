@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
         fontSize: 60,
         fontWeight: "800",
         color: colors.primary,
-        letterSpacing: -0.3,
+        letterSpacing: 0,
         flex: 1,
     },
     searchButton: {
@@ -312,7 +312,7 @@ const styles = StyleSheet.create({
         ...typography.h1,
         color: colors.textPrimary,
         marginBottom: spacing.xxl,
-        letterSpacing: -1,
+        letterSpacing: 0,
     },
     titleAccent: {
         color: colors.primary,

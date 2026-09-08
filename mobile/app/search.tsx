@@ -503,7 +503,7 @@ const styles = StyleSheet.create({
         ...typography.h3,
         color: colors.textPrimary,
         marginBottom: spacing.md,
-        letterSpacing: -0.3,
+        letterSpacing: 0,
     },
     resultCard: {
         ...shadows.sm,

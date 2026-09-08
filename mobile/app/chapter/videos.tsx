@@ -22,6 +22,7 @@ import type {
     VideosResponse,
 } from "../../src/types/video";
 import { API_ENDPOINTS } from "../../src/constants/api";
+import { borderRadius, colors, shadows, spacing, typography } from "../../src/constants/theme";
 
 export default function VideosScreen() {
     const {
@@ -259,39 +260,40 @@ export default function VideosScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
+        backgroundColor: colors.background,
     },
 
     contentContainer: {
-        paddingHorizontal: 20,
-        paddingBottom: 32,
+        paddingHorizontal: spacing.xl,
+        paddingBottom: spacing.xxxl,
     },
 
     header: {
-        paddingTop: 24,
-        paddingBottom: 24,
+        paddingTop: spacing.xl,
+        paddingBottom: spacing.xxl,
     },
 
     classText: {
-        fontSize: 13,
-        fontWeight: "600",
+        ...typography.overline,
+        color: colors.primary,
     },
 
     subjectText: {
-        marginTop: 4,
-        fontSize: 15,
+        marginTop: spacing.xs,
+        ...typography.bodySm,
+        color: colors.textSecondary,
     },
 
     chapterText: {
-        marginTop: 18,
-        fontSize: 13,
-        fontWeight: "600",
+        marginTop: spacing.lg,
+        ...typography.overline,
+        color: colors.textSecondary,
     },
 
     chapterName: {
-        marginTop: 5,
-        fontSize: 28,
-        lineHeight: 36,
-        fontWeight: "700",
+        marginTop: spacing.xs,
+        ...typography.h2,
+        color: colors.textPrimary,
     },
 
     videoSection: {
@@ -299,134 +301,137 @@ const styles = StyleSheet.create({
     },
 
     sectionTitle: {
-        fontSize: 22,
-        lineHeight: 28,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
     },
 
     sectionDescription: {
-        marginTop: 6,
-        fontSize: 14,
-        lineHeight: 21,
+        marginTop: spacing.xs,
+        ...typography.caption,
+        color: colors.textSecondary,
     },
 
     videoList: {
-        marginTop: 18,
-        gap: 14,
+        marginTop: spacing.lg,
+        gap: spacing.md,
     },
 
     videoCard: {
-        padding: 16,
+        ...shadows.sm,
+        padding: spacing.md,
+        backgroundColor: colors.card,
         borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 14,
+        borderColor: colors.border,
+        borderRadius: borderRadius.md,
         flexDirection: "row",
         alignItems: "center",
     },
 
     videoIcon: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
+        width: 42,
+        height: 42,
+        borderRadius: borderRadius.md,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: "#000000",
+        backgroundColor: colors.primary,
     },
 
     playIcon: {
-        color: "#ffffff",
+        color: colors.card,
         fontSize: 16,
         marginLeft: 2,
     },
 
     videoInfo: {
         flex: 1,
-        marginLeft: 12,
-        marginRight: 10,
+        marginLeft: spacing.md,
+        marginRight: spacing.sm,
     },
 
     videoTitle: {
-        fontSize: 16,
-        lineHeight: 22,
-        fontWeight: "600",
+        ...typography.bodySm,
+        color: colors.textPrimary,
+        fontWeight: "700",
     },
 
     channelName: {
-        marginTop: 5,
-        fontSize: 13,
+        marginTop: spacing.xs,
+        ...typography.captionSm,
+        color: colors.textSecondary,
     },
 
     language: {
-        marginTop: 4,
-        fontSize: 10,
-        fontWeight: "600",
-        letterSpacing: 0.8,
+        marginTop: spacing.xs,
+        ...typography.overline,
+        color: colors.primary,
     },
 
     watchButton: {
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        borderRadius: 8,
-        backgroundColor: "#000000",
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.primary,
     },
 
     watchButtonText: {
-        color: "#ffffff",
-        fontSize: 13,
-        fontWeight: "600",
+        color: colors.card,
+        ...typography.captionSm,
+        fontWeight: "700",
     },
 
     centerContainer: {
         flex: 1,
-        paddingHorizontal: 24,
+        paddingHorizontal: spacing.xxl,
         alignItems: "center",
         justifyContent: "center",
     },
 
     loadingText: {
-        marginTop: 12,
-        fontSize: 15,
+        marginTop: spacing.md,
+        ...typography.bodySm,
+        color: colors.textSecondary,
     },
 
     errorTitle: {
-        fontSize: 20,
-        fontWeight: "700",
+        ...typography.title,
+        color: colors.textPrimary,
         textAlign: "center",
     },
 
     errorText: {
-        marginTop: 8,
-        fontSize: 15,
-        lineHeight: 22,
+        marginTop: spacing.sm,
+        ...typography.bodySm,
+        color: colors.textSecondary,
         textAlign: "center",
     },
 
     primaryButton: {
-        marginTop: 24,
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 10,
-        backgroundColor: "#000000",
+        marginTop: spacing.xxl,
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.primary,
     },
 
     primaryButtonText: {
-        color: "#ffffff",
-        fontSize: 15,
-        fontWeight: "600",
+        color: colors.card,
+        ...typography.caption,
+        fontWeight: "700",
     },
 
     secondaryButton: {
-        marginTop: 12,
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 10,
+        marginTop: spacing.md,
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
-        borderColor: "#dddddd",
+        borderColor: colors.border,
     },
 
     secondaryButtonText: {
-        fontSize: 15,
-        fontWeight: "600",
+        ...typography.caption,
+        color: colors.textPrimary,
+        fontWeight: "700",
     },
 
     emptyTitle: {
