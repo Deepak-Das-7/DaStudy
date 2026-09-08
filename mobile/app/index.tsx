@@ -24,7 +24,22 @@ export default function HomeScreen() {
                         <View style={styles.brandBadge}>
                             <Text style={styles.brandBadgeText}>📚</Text>
                         </View>
-                        <Text style={styles.appName}>DaStudy</Text>
+                        <Text style={styles.appName}>
+                            DaStudy
+                        </Text>
+
+                        <Pressable
+                            style={styles.searchLink}
+                            onPress={() => router.push("/search")}
+                        >
+                            <Text style={styles.searchLinkText}>
+                                🔎 Search Study Content
+                            </Text>
+                        </Pressable>
+
+                        <Text style={styles.title}>
+                            Learn. Practice. Grow.
+                        </Text>
                     </View>
 
                     <View style={styles.heroSection}>
@@ -180,7 +195,19 @@ const styles = StyleSheet.create({
         color: colors.primary,
         letterSpacing: -0.3,
     },
+    searchLink: {
+        marginTop: 16,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: "#dddddd",
+        borderRadius: 10,
+    },
 
+    searchLinkText: {
+        fontSize: 14,
+        fontWeight: "600",
+    },
     heroSection: {
         marginBottom: spacing.xxxl,
     },

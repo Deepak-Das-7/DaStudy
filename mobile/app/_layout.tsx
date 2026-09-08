@@ -54,7 +54,12 @@ export default function RootLayout() {
                         title: "Chapters",
                     }}
                 />
-
+                <Stack.Screen
+                    name="search"
+                    options={{
+                        title: "Search",
+                    }}
+                />
                 <Stack.Screen
                     name="chapter/[id]"
                     options={{

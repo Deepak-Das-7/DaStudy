@@ -13,6 +13,7 @@ import videoRoutes from "./routes/videoRoutes";
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
 import questionRoutes from "./routes/questionRoutes";
+import searchRoutes from "./routes/searchRoutes";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use("/api/chapters", chapterRoutes);
 app.use("/api/notes", noteRoutes);
 app.use("/api/videos", videoRoutes);
 app.use("/api/questions", questionRoutes);
+app.use("/api/search", searchRoutes);
 
 app.use(notFound);
 
