@@ -1,9 +1,9 @@
 import { Pressable, StyleSheet, Text, View, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 
 import { colors, shadows, spacing, borderRadius, typography } from "../src/constants/theme";
+import { goToBookmarks, goToClasses, goToSearch } from "../src/services/navigation";
 
 export default function HomeScreen() {
     // Entrance animations for the whole content
@@ -26,7 +26,7 @@ export default function HomeScreen() {
     const buttonSlide = useRef(new Animated.Value(20)).current;
 
     const handleBookmarks = (): void => {
-        router.push("/bookmarks");
+        goToBookmarks();
     };
 
     useEffect(() => {
@@ -82,7 +82,7 @@ export default function HomeScreen() {
     }, []);
 
     const handleStartStudying = () => {
-        router.push("/classes");
+        goToClasses();
     };
 
     return (
@@ -111,7 +111,7 @@ export default function HomeScreen() {
                             <Text style={styles.brandBadgeText}>📚</Text>
                         </View>
                         <Text style={styles.appName}>DaStudy</Text>
-                        <Pressable style={styles.searchButton} onPress={() => router.push("/search")}>
+                        <Pressable style={styles.searchButton} onPress={() => goToSearch()}>
                             <Text style={styles.searchIcon}>🔎</Text>
                         </Pressable>
                     </View>

@@ -22,6 +22,7 @@ import {
     getSubjectColor,
     getClassColor,
 } from "../src/constants/theme";
+import { API_ENDPOINTS } from "../src/constants/api";
 
 // Generic ResultCard with entrance animation
 const ResultCard = ({
@@ -148,9 +149,12 @@ export default function SearchScreen() {
         try {
             setLoading(true);
             setError("");
-            const response = await api.get<SearchResponse>("/search", {
-                params: { q: trimmedQuery },
-            });
+            const response = await api.get<SearchResponse>(
+                API_ENDPOINTS.SEARCH,
+                {
+                    params: { q: trimmedQuery },
+                }
+            );
             setResults(response.data.data);
         } catch (requestError) {
             console.error("Search request failed:", requestError);

@@ -20,6 +20,7 @@ import {
     typography,
     getClassColor,
 } from "../src/constants/theme";
+import { API_ENDPOINTS } from "../src/constants/api";
 
 // Extracted ClassCard component with its own animations
 const ClassCard = ({
@@ -97,7 +98,9 @@ export default function ClassesScreen() {
         try {
             setLoading(true);
             setError("");
-            const response = await api.get<ClassesResponse>("/classes");
+            const response = await api.get<ClassesResponse>(
+                API_ENDPOINTS.CLASSES
+            );
             setClasses(response.data.data);
         } catch (error) {
             console.error("Failed to fetch classes:", error);

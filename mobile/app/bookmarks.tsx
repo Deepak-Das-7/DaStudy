@@ -11,6 +11,7 @@ import {
     typography,
     shadows,
 } from "../src/constants/theme";
+import { goToChapter, goToClasses } from "../src/services/navigation";
 
 // Extracted BookmarkCard component with entrance animation
 const BookmarkCard = ({
@@ -151,7 +152,9 @@ export default function BookmarksScreen() {
 
     const handleOpenBookmark = (bookmark: BookmarkItem): void => {
         if (!bookmark.chapterId) return;
-        router.push({ pathname: `/chapter/${bookmark.chapterId}` });
+        goToChapter(
+            bookmark.chapterId
+        );
     };
 
     if (loading) {
@@ -207,7 +210,7 @@ export default function BookmarksScreen() {
                                 styles.primaryButton,
                                 pressed && styles.buttonPressed,
                             ]}
-                            onPress={() => router.push("/classes")}
+                            onPress={() => goToClasses()}
                         >
                             <Text style={styles.primaryButtonText}>Browse Classes →</Text>
                         </Pressable>

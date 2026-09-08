@@ -25,6 +25,12 @@ import {
     typography,
     getSubjectColor,
 } from "../../src/constants/theme";
+import { API_ENDPOINTS } from "../../src/constants/api";
+import {
+    goToNotes,
+    goToVideos,
+    goToQuestions,
+} from "../../src/services/navigation";
 
 // Extracted OptionCard component with its own entrance animation
 const OptionCard = ({
@@ -180,7 +186,9 @@ export default function ChapterDetailsScreen() {
         try {
             setLoading(true);
             setError("");
-            const response = await api.get<ChapterResponse>(`/chapters/${id}`);
+            const response = await api.get<ChapterResponse>(
+                `${API_ENDPOINTS.CHAPTERS}/${id}`
+            );
             setChapter(response.data.data);
         } catch (error) {
             console.error("Failed to fetch chapter:", error);
@@ -351,17 +359,15 @@ export default function ChapterDetailsScreen() {
                             borderColor={colors.primary}
                             iconBg={colors.subjectMath}
                             onPress={() => {
-                                router.push({
-                                    pathname: "/chapter/notes",
-                                    params: {
+                                goToNotes(
+                                    {
                                         chapterId: chapter._id,
-                                        chapterNumber:
-                                            chapter.chapterNumber.toString(),
+                                        chapterNumber: chapter.chapterNumber.toString(),
                                         chapterName: chapter.name,
                                         classNumber: classNumber ?? "",
-                                        subjectName: subjectName ?? "",
-                                    },
-                                });
+                                        subjectName: subjectName ?? ""
+                                    }
+                                );
                             }}
                             index={0}
                         />
@@ -374,17 +380,15 @@ export default function ChapterDetailsScreen() {
                             borderColor={colors.success}
                             iconBg={colors.subjectScience}
                             onPress={() => {
-                                router.push({
-                                    pathname: "/chapter/videos",
-                                    params: {
+                                goToVideos(
+                                    {
                                         chapterId: chapter._id,
-                                        chapterNumber:
-                                            chapter.chapterNumber.toString(),
+                                        chapterNumber: chapter.chapterNumber.toString(),
                                         chapterName: chapter.name,
                                         classNumber: classNumber ?? "",
-                                        subjectName: subjectName ?? "",
-                                    },
-                                });
+                                        subjectName: subjectName ?? ""
+                                    }
+                                );
                             }}
                             index={1}
                         />
@@ -397,16 +401,12 @@ export default function ChapterDetailsScreen() {
                             borderColor={colors.warning}
                             iconBg={colors.subjectHistory}
                             onPress={() => {
-                                router.push({
-                                    pathname: "/chapter/questions",
-                                    params: {
-                                        chapterId: chapter._id,
-                                        chapterNumber:
-                                            chapter.chapterNumber.toString(),
-                                        chapterName: chapter.name,
-                                        classNumber: classNumber ?? "",
-                                        subjectName: subjectName ?? "",
-                                    },
+                                goToQuestions({
+                                    chapterId: chapter._id,
+                                    chapterNumber: chapter.chapterNumber.toString(),
+                                    chapterName: chapter.name,
+                                    classNumber: classNumber ?? "",
+                                    subjectName: subjectName ?? ""
                                 });
                             }}
                             index={2}

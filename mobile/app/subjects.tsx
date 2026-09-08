@@ -20,6 +20,7 @@ import {
     typography,
     getSubjectColor,
 } from "../src/constants/theme";
+import { API_ENDPOINTS } from "../src/constants/api";
 
 // Extracted SubjectCard component with its own animations
 const SubjectCard = ({
@@ -129,9 +130,12 @@ export default function SubjectsScreen() {
         try {
             setLoading(true);
             setError("");
-            const response = await api.get<SubjectsResponse>("/subjects", {
-                params: { classId },
-            });
+            const response = await api.get<SubjectsResponse>(
+                API_ENDPOINTS.SUBJECTS,
+                {
+                    params: { classId },
+                }
+            );
             setSubjects(response.data.data);
         } catch (error) {
             console.error("Failed to fetch subjects:", error);

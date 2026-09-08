@@ -21,6 +21,7 @@ import type {
     VideoItem,
     VideosResponse,
 } from "../../src/types/video";
+import { API_ENDPOINTS } from "../../src/constants/api";
 
 export default function VideosScreen() {
     const {
@@ -62,11 +63,9 @@ export default function VideosScreen() {
 
             const response =
                 await api.get<VideosResponse>(
-                    "/videos",
+                    API_ENDPOINTS.VIDEOS,
                     {
-                        params: {
-                            chapterId,
-                        },
+                        params: { chapterId },
                     }
                 );
 

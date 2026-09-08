@@ -20,6 +20,7 @@ import {
     typography,
     getSubjectColor,
 } from "../../src/constants/theme";
+import { API_ENDPOINTS } from "../../src/constants/api";
 
 // Extracted NoteCard component (no animations needed, but can be used for consistency)
 const NoteCard = ({ note, index }: { note: NoteItem; index: number }) => {
@@ -114,9 +115,12 @@ export default function NotesScreen() {
         try {
             setLoading(true);
             setError("");
-            const response = await api.get<NotesResponse>("/notes", {
-                params: { chapterId },
-            });
+            const response = await api.get<NotesResponse>(
+                API_ENDPOINTS.NOTES,
+                {
+                    params: { chapterId },
+                }
+            );
             setNotes(response.data.data);
         } catch (error) {
             console.error("Failed to fetch notes:", error);

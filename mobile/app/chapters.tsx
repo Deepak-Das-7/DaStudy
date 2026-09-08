@@ -20,6 +20,7 @@ import {
     typography,
     getSubjectColor,
 } from "../src/constants/theme";
+import { API_ENDPOINTS } from "../src/constants/api";
 
 // Extracted ChapterCard component with its own animation
 const ChapterCard = ({
@@ -143,9 +144,12 @@ export default function ChaptersScreen() {
         try {
             setLoading(true);
             setError("");
-            const response = await api.get<ChaptersResponse>("/chapters", {
-                params: { subjectId },
-            });
+            const response = await api.get<ChaptersResponse>(
+                API_ENDPOINTS.CHAPTERS,
+                {
+                    params: { subjectId },
+                }
+            );
             setChapters(response.data.data);
         } catch (error) {
             console.error("Failed to fetch chapters:", error);

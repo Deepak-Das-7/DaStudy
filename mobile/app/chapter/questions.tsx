@@ -20,6 +20,7 @@ import type {
     QuestionItem,
     QuestionsResponse,
 } from "../../src/types/question";
+import { API_ENDPOINTS } from "../../src/constants/api";
 
 export default function QuestionsScreen() {
     const {
@@ -74,11 +75,9 @@ export default function QuestionsScreen() {
 
             const response =
                 await api.get<QuestionsResponse>(
-                    "/questions",
+                    API_ENDPOINTS.QUESTIONS,
                     {
-                        params: {
-                            chapterId,
-                        },
+                        params: { chapterId },
                     }
                 );
 
