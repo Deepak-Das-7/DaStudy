@@ -353,7 +353,19 @@ export default function ChapterDetailsScreen() {
                             badgeColor={colors.warning}
                             borderColor={colors.warning}
                             iconBg={colors.subjectHistory}
-                            onPress={() => console.log("Questions selected:", chapter._id)}
+                            onPress={() => {
+                                router.push({
+                                    pathname: "/chapter/questions",
+                                    params: {
+                                        chapterId: chapter._id,
+                                        chapterNumber:
+                                            chapter.chapterNumber.toString(),
+                                        chapterName: chapter.name,
+                                        classNumber: classNumber ?? "",
+                                        subjectName: subjectName ?? "",
+                                    },
+                                });
+                            }}
                             index={2}
                         />
                     </View>
