@@ -1,10 +1,82 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View, Animated } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useEffect, useRef } from "react";
 
 import { colors, shadows, spacing, borderRadius, typography } from "../src/constants/theme";
 
 export default function HomeScreen() {
+    // Entrance animations for the whole content
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(30)).current;
+
+    // Staggered animations for feature rows
+    const featureFades = useRef([
+        new Animated.Value(0),
+        new Animated.Value(0),
+        new Animated.Value(0),
+    ]).current;
+    const featureSlides = useRef([
+        new Animated.Value(20),
+        new Animated.Value(20),
+        new Animated.Value(20),
+    ]).current;
+
+    const buttonFade = useRef(new Animated.Value(0)).current;
+    const buttonSlide = useRef(new Animated.Value(20)).current;
+
+    useEffect(() => {
+        // Main content entrance
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 600,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        // Staggered feature rows
+        featureFades.forEach((fade, i) => {
+            Animated.sequence([
+                Animated.delay(i * 150 + 300),
+                Animated.parallel([
+                    Animated.timing(fade, {
+                        toValue: 1,
+                        duration: 400,
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(featureSlides[i], {
+                        toValue: 0,
+                        duration: 400,
+                        useNativeDriver: true,
+                    }),
+                ]),
+            ]).start();
+        });
+
+        // Button reveal
+        Animated.sequence([
+            Animated.delay(800),
+            Animated.parallel([
+                Animated.timing(buttonFade, {
+                    toValue: 1,
+                    duration: 400,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(buttonSlide, {
+                    toValue: 0,
+                    duration: 400,
+                    useNativeDriver: true,
+                }),
+            ]),
+        ]).start();
+    }, []);
+
     const handleStartStudying = () => {
         router.push("/classes");
     };
@@ -12,6 +84,7 @@ export default function HomeScreen() {
     return (
         <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
             <View style={styles.container}>
+                {/* Decorative elements – static for performance */}
                 <View style={styles.decorationContainer}>
                     <View style={[styles.decorationCircle, styles.circle1]} />
                     <View style={[styles.decorationCircle, styles.circle2]} />
@@ -19,77 +92,91 @@ export default function HomeScreen() {
                     <View style={[styles.decorationBlob, styles.blob2]} />
                 </View>
 
-                <View style={styles.content}>
+                <Animated.View
+                    style={[
+                        styles.content,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
+                >
+                    {/* Brand */}
                     <View style={styles.brandContainer}>
                         <View style={styles.brandBadge}>
                             <Text style={styles.brandBadgeText}>📚</Text>
                         </View>
-                        <Text style={styles.appName}>
-                            DaStudy
-                        </Text>
-
-                        <Pressable
-                            style={styles.searchLink}
-                            onPress={() => router.push("/search")}
-                        >
-                            <Text style={styles.searchLinkText}>
-                                🔎 Search Study Content
-                            </Text>
+                        <Text style={styles.appName}>DaStudy</Text>
+                        <Pressable style={styles.searchButton} onPress={() => router.push("/search")}>
+                            <Text style={styles.searchIcon}>🔎</Text>
                         </Pressable>
-
-                        <Text style={styles.title}>
-                            Learn. Practice. Grow.
-                        </Text>
                     </View>
 
+                    {/* Hero */}
                     <View style={styles.heroSection}>
                         <Text style={styles.title}>
                             Learn. Practice.{"\n"}
                             <Text style={styles.titleAccent}>Grow.</Text>
                         </Text>
 
-                        <View style={styles.featureRow}>
-                            <View style={styles.featureDot} />
-                            <Text style={styles.description}>
-                                Comprehensive study notes for every chapter
-                            </Text>
-                        </View>
-
-                        <View style={styles.featureRow}>
-                            <View style={styles.featureDot} />
-                            <Text style={styles.description}>
-                                Curated video lectures from top educators
-                            </Text>
-                        </View>
-
-                        <View style={styles.featureRow}>
-                            <View style={styles.featureDot} />
-                            <Text style={styles.description}>
-                                Practice questions to test your knowledge
-                            </Text>
-                        </View>
+                        {[
+                            "Comprehensive study notes for every chapter",
+                            "Curated video lectures from top educators",
+                            "Practice questions to test your knowledge",
+                        ].map((text, i) => (
+                            <Animated.View
+                                key={i}
+                                style={[
+                                    styles.featureRow,
+                                    {
+                                        opacity: featureFades[i],
+                                        transform: [{ translateY: featureSlides[i] }],
+                                    },
+                                ]}
+                            >
+                                <View style={styles.featureDot} />
+                                <Text style={styles.description}>{text}</Text>
+                            </Animated.View>
+                        ))}
                     </View>
 
-                    <Pressable
-                        style={({ pressed }) => [
-                            styles.button,
-                            pressed && styles.buttonPressed,
-                        ]}
-                        onPress={handleStartStudying}
+                    {/* Button */}
+                    <Animated.View
+                        style={{
+                            opacity: buttonFade,
+                            transform: [{ translateY: buttonSlide }],
+                        }}
                     >
-                        <Text style={styles.buttonText}>Start Studying</Text>
-                        <View style={styles.buttonArrow}>
-                            <Text style={styles.buttonArrowText}>→</Text>
-                        </View>
-                    </Pressable>
-                </View>
+                        <Pressable
+                            style={({ pressed }) => [
+                                styles.button,
+                                pressed && styles.buttonPressed,
+                            ]}
+                            onPress={handleStartStudying}
+                        >
+                            <Text style={styles.buttonText}>Start Studying</Text>
+                            <View style={styles.buttonArrow}>
+                                <Text style={styles.buttonArrowText}>→</Text>
+                            </View>
+                        </Pressable>
+                    </Animated.View>
+                </Animated.View>
 
-                <View style={styles.footerContainer}>
+                {/* Footer */}
+                <Animated.View
+                    style={[
+                        styles.footerContainer,
+                        {
+                            opacity: fadeAnim,
+                            transform: [{ translateY: slideAnim }],
+                        },
+                    ]}
+                >
                     <View style={styles.footerBadge}>
-                        <Text style={styles.footerBadgeDot} />
+                        <View style={styles.footerBadgeDot} />
                         <Text style={styles.footer}>Free & Open Source</Text>
                     </View>
-                </View>
+                </Animated.View>
             </View>
         </SafeAreaView>
     );
@@ -100,7 +187,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: colors.background,
     },
-
     container: {
         flex: 1,
         paddingHorizontal: spacing.xl,
@@ -109,6 +195,7 @@ const styles = StyleSheet.create({
         overflow: "hidden",
     },
 
+    // Decorative elements (unchanged)
     decorationContainer: {
         position: "absolute",
         top: 0,
@@ -117,13 +204,11 @@ const styles = StyleSheet.create({
         bottom: 0,
         pointerEvents: "none",
     },
-
     decorationCircle: {
         position: "absolute",
         borderRadius: 999,
         opacity: 0.4,
     },
-
     circle1: {
         width: 300,
         height: 300,
@@ -131,7 +216,6 @@ const styles = StyleSheet.create({
         right: -100,
         backgroundColor: colors.primaryLight,
     },
-
     circle2: {
         width: 200,
         height: 200,
@@ -139,12 +223,10 @@ const styles = StyleSheet.create({
         left: -80,
         backgroundColor: colors.subjectScience,
     },
-
     decorationBlob: {
         position: "absolute",
         opacity: 0.35,
     },
-
     blob1: {
         width: 140,
         height: 140,
@@ -153,7 +235,6 @@ const styles = StyleSheet.create({
         borderRadius: 70,
         backgroundColor: colors.subjectHistory,
     },
-
     blob2: {
         width: 100,
         height: 100,
@@ -163,6 +244,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.subjectGeography,
     },
 
+    // Content
     content: {
         flex: 1,
         justifyContent: "center",
@@ -174,61 +256,48 @@ const styles = StyleSheet.create({
         alignItems: "center",
         marginBottom: spacing.xxxl,
     },
-
     brandBadge: {
-        width: 44,
-        height: 44,
+        width: 50,
+        height: 50,
         borderRadius: borderRadius.md,
-        backgroundColor: colors.primaryLight,
         alignItems: "center",
         justifyContent: "center",
         marginRight: spacing.md,
     },
-
     brandBadgeText: {
-        fontSize: 22,
+        fontSize: 40,
     },
-
     appName: {
-        fontSize: 19,
+        fontSize: 60,
         fontWeight: "800",
         color: colors.primary,
         letterSpacing: -0.3,
+        flex: 1,
     },
-    searchLink: {
-        marginTop: 16,
-        paddingVertical: 12,
-        paddingHorizontal: 14,
-        borderWidth: 1,
-        borderColor: "#dddddd",
-        borderRadius: 10,
+    searchButton: {
+        padding: spacing.sm,
+    },
+    searchIcon: {
+        fontSize: 40,
     },
 
-    searchLinkText: {
-        fontSize: 14,
-        fontWeight: "600",
-    },
     heroSection: {
         marginBottom: spacing.xxxl,
     },
-
     title: {
         ...typography.h1,
         color: colors.textPrimary,
         marginBottom: spacing.xxl,
         letterSpacing: -1,
     },
-
     titleAccent: {
         color: colors.primary,
     },
-
     featureRow: {
         flexDirection: "row",
         alignItems: "center",
         marginBottom: spacing.md,
     },
-
     featureDot: {
         width: 8,
         height: 8,
@@ -236,13 +305,13 @@ const styles = StyleSheet.create({
         backgroundColor: colors.primary,
         marginRight: spacing.lg,
     },
-
     description: {
         ...typography.bodySm,
         color: colors.textSecondary,
         flex: 1,
     },
 
+    // Button
     button: {
         ...shadows.xl,
         flexDirection: "row",
@@ -253,19 +322,16 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.pill,
         backgroundColor: colors.primary,
     },
-
     buttonPressed: {
         opacity: 0.9,
         transform: [{ scale: 0.98 }],
     },
-
     buttonText: {
         color: "#FFFFFF",
         fontSize: 17,
         fontWeight: "700",
         letterSpacing: 0.3,
     },
-
     buttonArrow: {
         marginLeft: spacing.sm,
         width: 28,
@@ -275,19 +341,18 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-
     buttonArrowText: {
         color: "#FFFFFF",
         fontSize: 16,
         fontWeight: "700",
     },
 
+    // Footer
     footerContainer: {
         paddingBottom: spacing.lg,
         alignItems: "center",
         zIndex: 1,
     },
-
     footerBadge: {
         flexDirection: "row",
         alignItems: "center",
@@ -297,7 +362,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.card,
         ...shadows.sm,
     },
-
     footerBadgeDot: {
         width: 8,
         height: 8,
@@ -305,7 +369,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.success,
         marginRight: spacing.sm,
     },
-
     footer: {
         ...typography.captionSm,
         color: colors.textSecondary,
