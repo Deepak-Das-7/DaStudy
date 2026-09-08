@@ -79,6 +79,12 @@ export default function RootLayout() {
                         title: "Practice Questions",
                     }}
                 />
+                <Stack.Screen
+                    name="chapter/quiz-result"
+                    options={{
+                        title: "Quiz Result",
+                    }}
+                />
             </Stack>
         </SafeAreaProvider>
     );

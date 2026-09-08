@@ -141,7 +141,32 @@ export default function QuestionsScreen() {
             setScore((previousScore) => previousScore + 1);
         }
     };
+    const handleFinishQuiz = (): void => {
+        const finalScore =
+            score +
+            (selectedAnswer ===
+                currentQuestion.correctAnswer
+                ? 1
+                : 0);
 
+        router.replace({
+            pathname: "/chapter/quiz-result",
+            params: {
+                score: finalScore.toString(),
+                total: questions.length.toString(),
+                chapterId:
+                    chapterId ?? "",
+                chapterNumber:
+                    chapterNumber ?? "",
+                chapterName:
+                    chapterName ?? "",
+                classNumber:
+                    classNumber ?? "",
+                subjectName:
+                    subjectName ?? "",
+            },
+        });
+    };
     const handleNextQuestion = (): void => {
         if (isLastQuestion) {
             return;
@@ -483,15 +508,31 @@ export default function QuestionsScreen() {
             )}
 
             {submitted && isLastQuestion && (
-                <View style={styles.lastQuestionMessage}>
-                    <Text style={styles.lastQuestionText}>
-                        You have completed all questions.
-                    </Text>
+                <View style={styles.lastQuestionSection}>
+                    <View style={styles.lastQuestionMessage}>
+                        <Text style={styles.lastQuestionText}>
+                            You have completed all questions.
+                        </Text>
 
-                    <Text style={styles.lastQuestionScore}>
-                        Current score: {score} /{" "}
-                        {questions.length}
-                    </Text>
+                        <Text style={styles.lastQuestionScore}>
+                            Current score:{" "}
+                            {score +
+                                (selectedAnswer ===
+                                    currentQuestion.correctAnswer
+                                    ? 1
+                                    : 0)}{" "}
+                            / {questions.length}
+                        </Text>
+                    </View>
+
+                    <Pressable
+                        style={styles.primaryButton}
+                        onPress={handleFinishQuiz}
+                    >
+                        <Text style={styles.primaryButtonText}>
+                            View Results
+                        </Text>
+                    </Pressable>
                 </View>
             )}
         </ScrollView>
@@ -586,7 +627,9 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: "600",
     },
-
+    lastQuestionSection: {
+        marginTop: 20,
+    },
     questionText: {
         marginTop: 10,
         fontSize: 18,
