@@ -45,6 +45,18 @@ export default function QuestionsScreen() {
     const [error, setError] =
         useState("");
 
+    const [currentQuestionIndex, setCurrentQuestionIndex] =
+        useState(0);
+
+    const [selectedAnswer, setSelectedAnswer] =
+        useState<number | null>(null);
+
+    const [submitted, setSubmitted] =
+        useState(false);
+
+    const [score, setScore] =
+        useState(0);
+
     const fetchQuestions = async (): Promise<void> => {
         if (!chapterId) {
             setError(
@@ -71,6 +83,11 @@ export default function QuestionsScreen() {
                 );
 
             setQuestions(response.data.data);
+
+            setCurrentQuestionIndex(0);
+            setSelectedAnswer(null);
+            setSubmitted(false);
+            setScore(0);
         } catch (error) {
             console.error(
                 "Failed to fetch questions:",
@@ -88,6 +105,118 @@ export default function QuestionsScreen() {
     useEffect(() => {
         void fetchQuestions();
     }, [chapterId]);
+
+    const currentQuestion =
+        questions[currentQuestionIndex];
+
+    const isLastQuestion =
+        currentQuestionIndex ===
+        questions.length - 1;
+
+    const handleSelectAnswer = (
+        optionIndex: number
+    ): void => {
+        if (submitted) {
+            return;
+        }
+
+        setSelectedAnswer(optionIndex);
+    };
+
+    const handleCheckAnswer = (): void => {
+        if (
+            selectedAnswer === null ||
+            submitted ||
+            !currentQuestion
+        ) {
+            return;
+        }
+
+        setSubmitted(true);
+
+        if (
+            selectedAnswer ===
+            currentQuestion.correctAnswer
+        ) {
+            setScore((previousScore) => previousScore + 1);
+        }
+    };
+
+    const handleNextQuestion = (): void => {
+        if (isLastQuestion) {
+            return;
+        }
+
+        setCurrentQuestionIndex(
+            (previousIndex) =>
+                previousIndex + 1
+        );
+
+        setSelectedAnswer(null);
+        setSubmitted(false);
+    };
+
+    const getOptionStyle = (
+        optionIndex: number
+    ) => {
+        if (!submitted) {
+            if (
+                selectedAnswer === optionIndex
+            ) {
+                return styles.selectedOption;
+            }
+
+            return styles.optionButton;
+        }
+
+        if (
+            currentQuestion.correctAnswer ===
+            optionIndex
+        ) {
+            return styles.correctOption;
+        }
+
+        if (
+            selectedAnswer === optionIndex &&
+            selectedAnswer !==
+            currentQuestion.correctAnswer
+        ) {
+            return styles.incorrectOption;
+        }
+
+        return styles.optionButton;
+    };
+
+    const getOptionNumberStyle = (
+        optionIndex: number
+    ) => {
+        if (!submitted) {
+            if (
+                selectedAnswer === optionIndex
+            ) {
+                return styles.selectedOptionNumber;
+            }
+
+            return styles.optionNumber;
+        }
+
+        if (
+            currentQuestion.correctAnswer ===
+            optionIndex
+        ) {
+            return styles.correctOptionNumber;
+        }
+
+        if (
+            selectedAnswer === optionIndex &&
+            selectedAnswer !==
+            currentQuestion.correctAnswer
+        ) {
+            return styles.incorrectOptionNumber;
+        }
+
+        return styles.optionNumber;
+    };
 
     if (loading) {
         return (
@@ -163,6 +292,27 @@ export default function QuestionsScreen() {
         );
     }
 
+    if (!currentQuestion) {
+        return (
+            <View style={styles.centerContainer}>
+                <Text style={styles.errorTitle}>
+                    Question not found
+                </Text>
+
+                <Pressable
+                    style={styles.secondaryButton}
+                    onPress={() => router.back()}
+                >
+                    <Text
+                        style={styles.secondaryButtonText}
+                    >
+                        Go Back
+                    </Text>
+                </Pressable>
+            </View>
+        );
+    }
+
     return (
         <ScrollView
             style={styles.container}
@@ -193,55 +343,157 @@ export default function QuestionsScreen() {
                 </Text>
             </View>
 
-            <View style={styles.questionList}>
-                {questions.map(
-                    (question, questionIndex) => (
-                        <View
-                            key={question._id}
-                            style={styles.questionCard}
-                        >
-                            <Text style={styles.questionNumber}>
-                                Question {questionIndex + 1}
-                            </Text>
+            <View style={styles.progressSection}>
+                <View style={styles.progressHeader}>
+                    <Text style={styles.progressText}>
+                        Question {currentQuestionIndex + 1} of{" "}
+                        {questions.length}
+                    </Text>
 
-                            <Text style={styles.questionText}>
-                                {question.question}
-                            </Text>
+                    <Text style={styles.scoreText}>
+                        Score: {score}
+                    </Text>
+                </View>
 
-                            <View style={styles.optionsContainer}>
-                                {question.options.map(
-                                    (option, optionIndex) => (
-                                        <Pressable
-                                            key={`${question._id}-${optionIndex}`}
-                                            style={styles.optionButton}
-                                        >
-                                            <View
-                                                style={styles.optionNumber}
-                                            >
-                                                <Text
-                                                    style={
-                                                        styles.optionNumberText
-                                                    }
-                                                >
-                                                    {String.fromCharCode(
-                                                        65 + optionIndex
-                                                    )}
-                                                </Text>
-                                            </View>
-
-                                            <Text
-                                                style={styles.optionText}
-                                            >
-                                                {option}
-                                            </Text>
-                                        </Pressable>
-                                    )
-                                )}
-                            </View>
-                        </View>
-                    )
-                )}
+                <View style={styles.progressTrack}>
+                    <View
+                        style={[
+                            styles.progressFill,
+                            {
+                                width: `${((currentQuestionIndex + 1) /
+                                    questions.length) *
+                                    100
+                                    }%`,
+                            },
+                        ]}
+                    />
+                </View>
             </View>
+
+            <View style={styles.questionCard}>
+                <Text style={styles.questionNumber}>
+                    Question {currentQuestionIndex + 1}
+                </Text>
+
+                <Text style={styles.questionText}>
+                    {currentQuestion.question}
+                </Text>
+
+                <View style={styles.optionsContainer}>
+                    {currentQuestion.options.map(
+                        (option, optionIndex) => (
+                            <Pressable
+                                key={`${currentQuestion._id}-${optionIndex}`}
+                                style={getOptionStyle(
+                                    optionIndex
+                                )}
+                                onPress={() =>
+                                    handleSelectAnswer(
+                                        optionIndex
+                                    )
+                                }
+                                disabled={submitted}
+                            >
+                                <View
+                                    style={getOptionNumberStyle(
+                                        optionIndex
+                                    )}
+                                >
+                                    <Text
+                                        style={
+                                            styles.optionNumberText
+                                        }
+                                    >
+                                        {String.fromCharCode(
+                                            65 + optionIndex
+                                        )}
+                                    </Text>
+                                </View>
+
+                                <Text
+                                    style={styles.optionText}
+                                >
+                                    {option}
+                                </Text>
+                            </Pressable>
+                        )
+                    )}
+                </View>
+            </View>
+
+            {!submitted && (
+                <Pressable
+                    style={[
+                        styles.primaryButton,
+                        selectedAnswer === null &&
+                        styles.disabledButton,
+                    ]}
+                    disabled={selectedAnswer === null}
+                    onPress={handleCheckAnswer}
+                >
+                    <Text style={styles.primaryButtonText}>
+                        Check Answer
+                    </Text>
+                </Pressable>
+            )}
+
+            {submitted && (
+                <View style={styles.resultCard}>
+                    {selectedAnswer ===
+                        currentQuestion.correctAnswer ? (
+                        <Text style={styles.correctTitle}>
+                            ✓ Correct!
+                        </Text>
+                    ) : (
+                        <Text style={styles.incorrectTitle}>
+                            ✕ Incorrect
+                        </Text>
+                    )}
+
+                    {selectedAnswer !==
+                        currentQuestion.correctAnswer && (
+                            <Text style={styles.correctAnswerText}>
+                                Correct answer:{" "}
+                                {String.fromCharCode(
+                                    65 +
+                                    currentQuestion.correctAnswer
+                                )}
+                            </Text>
+                        )}
+
+                    <Text style={styles.explanationTitle}>
+                        Explanation
+                    </Text>
+
+                    <Text style={styles.explanationText}>
+                        {currentQuestion.explanation}
+                    </Text>
+                </View>
+            )}
+
+            {submitted && !isLastQuestion && (
+                <Pressable
+                    style={styles.primaryButton}
+                    onPress={handleNextQuestion}
+                >
+                    <Text style={styles.primaryButtonText}>
+                        Next Question
+                    </Text>
+                </Pressable>
+            )}
+
+            {submitted && isLastQuestion && (
+                <View style={styles.lastQuestionMessage}>
+                    <Text style={styles.lastQuestionText}>
+                        You have completed all questions.
+                    </Text>
+
+                    <Text style={styles.lastQuestionScore}>
+                        Current score: {score} /{" "}
+                        {questions.length}
+                    </Text>
+                </View>
+            )}
         </ScrollView>
     );
 }
@@ -253,12 +505,12 @@ const styles = StyleSheet.create({
 
     contentContainer: {
         paddingHorizontal: 20,
-        paddingBottom: 32,
+        paddingBottom: 40,
     },
 
     header: {
         paddingTop: 24,
-        paddingBottom: 24,
+        paddingBottom: 20,
     },
 
     classText: {
@@ -289,8 +541,38 @@ const styles = StyleSheet.create({
         fontSize: 14,
     },
 
-    questionList: {
-        gap: 16,
+    progressSection: {
+        marginBottom: 18,
+    },
+
+    progressHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+    },
+
+    progressText: {
+        fontSize: 14,
+        fontWeight: "600",
+    },
+
+    scoreText: {
+        fontSize: 14,
+        fontWeight: "600",
+    },
+
+    progressTrack: {
+        height: 8,
+        marginTop: 10,
+        borderRadius: 4,
+        overflow: "hidden",
+        backgroundColor: "#eeeeee",
+    },
+
+    progressFill: {
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: "#000000",
     },
 
     questionCard: {
@@ -328,6 +610,39 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
+    selectedOption: {
+        minHeight: 52,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderWidth: 2,
+        borderColor: "#000000",
+        borderRadius: 10,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+
+    correctOption: {
+        minHeight: 52,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderWidth: 2,
+        borderColor: "#000000",
+        borderRadius: 10,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+
+    incorrectOption: {
+        minHeight: 52,
+        paddingHorizontal: 12,
+        paddingVertical: 10,
+        borderWidth: 2,
+        borderColor: "#888888",
+        borderRadius: 10,
+        flexDirection: "row",
+        alignItems: "center",
+    },
+
     optionNumber: {
         width: 32,
         height: 32,
@@ -336,6 +651,36 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         borderWidth: 1,
         borderColor: "#dddddd",
+    },
+
+    selectedOptionNumber: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 2,
+        borderColor: "#000000",
+    },
+
+    correctOptionNumber: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 2,
+        borderColor: "#000000",
+    },
+
+    incorrectOptionNumber: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 2,
+        borderColor: "#888888",
     },
 
     optionNumberText: {
@@ -348,6 +693,81 @@ const styles = StyleSheet.create({
         marginLeft: 12,
         fontSize: 15,
         lineHeight: 21,
+    },
+
+    primaryButton: {
+        marginTop: 20,
+        paddingHorizontal: 28,
+        paddingVertical: 15,
+        borderRadius: 10,
+        alignItems: "center",
+        backgroundColor: "#000000",
+    },
+
+    primaryButtonText: {
+        color: "#ffffff",
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    disabledButton: {
+        opacity: 0.4,
+    },
+
+    resultCard: {
+        marginTop: 20,
+        padding: 18,
+        borderWidth: 1,
+        borderColor: "#dddddd",
+        borderRadius: 14,
+    },
+
+    correctTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+    },
+
+    incorrectTitle: {
+        fontSize: 20,
+        fontWeight: "700",
+    },
+
+    correctAnswerText: {
+        marginTop: 10,
+        fontSize: 15,
+        fontWeight: "600",
+    },
+
+    explanationTitle: {
+        marginTop: 18,
+        fontSize: 15,
+        fontWeight: "700",
+    },
+
+    explanationText: {
+        marginTop: 8,
+        fontSize: 15,
+        lineHeight: 23,
+    },
+
+    lastQuestionMessage: {
+        marginTop: 20,
+        padding: 18,
+        borderWidth: 1,
+        borderColor: "#dddddd",
+        borderRadius: 14,
+        alignItems: "center",
+    },
+
+    lastQuestionText: {
+        fontSize: 15,
+        textAlign: "center",
+    },
+
+    lastQuestionScore: {
+        marginTop: 8,
+        fontSize: 17,
+        fontWeight: "700",
     },
 
     centerContainer: {
@@ -374,21 +794,6 @@ const styles = StyleSheet.create({
         lineHeight: 22,
         textAlign: "center",
     },
-
-    primaryButton: {
-        marginTop: 24,
-        paddingHorizontal: 28,
-        paddingVertical: 14,
-        borderRadius: 10,
-        backgroundColor: "#000000",
-    },
-
-    primaryButtonText: {
-        color: "#ffffff",
-        fontSize: 15,
-        fontWeight: "600",
-    },
-
     secondaryButton: {
         marginTop: 12,
         paddingHorizontal: 28,
