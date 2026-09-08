@@ -25,6 +25,10 @@ export default function HomeScreen() {
     const buttonFade = useRef(new Animated.Value(0)).current;
     const buttonSlide = useRef(new Animated.Value(20)).current;
 
+    const handleBookmarks = (): void => {
+        router.push("/bookmarks");
+    };
+
     useEffect(() => {
         // Main content entrance
         Animated.parallel([
@@ -140,7 +144,27 @@ export default function HomeScreen() {
                         ))}
                     </View>
 
-                    {/* Button */}
+                    {/* Bookmark Card – compact & styled */}
+                    <Pressable
+                        style={({ pressed }) => [
+                            styles.bookmarkCard,
+                            pressed && styles.cardPressed,
+                        ]}
+                        onPress={handleBookmarks}
+                    >
+                        <View style={styles.bookmarkIconContainer}>
+                            <Text style={styles.bookmarkIcon}>⭐</Text>
+                        </View>
+                        <View style={styles.bookmarkContent}>
+                            <Text style={styles.bookmarkTitle}>My Bookmarks</Text>
+                            <Text style={styles.bookmarkSubtitle}>
+                                Access your saved study content
+                            </Text>
+                        </View>
+                        <Text style={styles.bookmarkArrow}>›</Text>
+                    </Pressable>
+
+                    {/* Main Button */}
                     <Animated.View
                         style={{
                             opacity: buttonFade,
@@ -311,7 +335,54 @@ const styles = StyleSheet.create({
         flex: 1,
     },
 
-    // Button
+    // ---- Bookmark Card (new, compact) ----
+    bookmarkCard: {
+        ...shadows.sm,
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: colors.card,
+        borderRadius: borderRadius.md,
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.md,
+        marginBottom: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    bookmarkIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: borderRadius.sm,
+        backgroundColor: colors.warningLight,
+        alignItems: "center",
+        justifyContent: "center",
+        marginRight: spacing.md,
+    },
+    bookmarkIcon: {
+        fontSize: 18,
+    },
+    bookmarkContent: {
+        flex: 1,
+    },
+    bookmarkTitle: {
+        ...typography.subtitle,
+        color: colors.textPrimary,
+        fontSize: 15,
+        fontWeight: "700",
+    },
+    bookmarkSubtitle: {
+        ...typography.captionSm,
+        color: colors.textSecondary,
+        marginTop: 1,
+    },
+    bookmarkArrow: {
+        fontSize: 22,
+        color: colors.primary,
+        fontWeight: "300",
+        marginLeft: spacing.sm,
+    },
+    // ------------------------------
+
+    // Main Button
     button: {
         ...shadows.xl,
         flexDirection: "row",
@@ -373,5 +444,11 @@ const styles = StyleSheet.create({
         ...typography.captionSm,
         color: colors.textSecondary,
         fontWeight: "600",
+    },
+
+    // Shared press state for cards
+    cardPressed: {
+        opacity: 0.85,
+        transform: [{ scale: 0.98 }],
     },
 });

@@ -61,6 +61,12 @@ export default function RootLayout() {
                     }}
                 />
                 <Stack.Screen
+                    name="bookmarks"
+                    options={{
+                        title: "My Bookmarks",
+                    }}
+                />
+                <Stack.Screen
                     name="chapter/[id]"
                     options={{
                         title: "Chapter Details",

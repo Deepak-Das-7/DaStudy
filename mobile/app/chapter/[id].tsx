@@ -9,7 +9,12 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState, useRef } from "react";
+import BookmarkButton from "../../src/components/BookmarkButton";
 
+import {
+    toggleBookmark,
+    isBookmarked,
+} from "../../src/services/bookmarkStorage";
 import { api } from "../../src/services/api";
 import type { ChapterItem, ChapterResponse } from "../../src/types/chapter";
 import {
@@ -85,7 +90,6 @@ const OptionCard = ({
 
                 <Text style={styles.optionTitle}>{title}</Text>
                 <Text style={styles.optionText}>{description}</Text>
-
                 <View style={[styles.optionBadge, { backgroundColor: badgeColor }]}>
                     <Text
                         style={[
@@ -115,7 +119,42 @@ export default function ChapterDetailsScreen() {
     // Animation for whole content (fade + slide up)
     const contentFade = useRef(new Animated.Value(0)).current;
     const contentTranslate = useRef(new Animated.Value(40)).current;
+    const [bookmarked, setBookmarked] =
+        useState(false);
 
+    useEffect(() => {
+        const loadBookmarkState = async (): Promise<void> => {
+            if (!id) {
+                return;
+            }
+
+            const result =
+                await isBookmarked(`chapter:${id}`);
+
+            setBookmarked(result);
+        };
+
+        loadBookmarkState();
+    }, [id]);
+
+    const handleToggleBookmark =
+        async (): Promise<void> => {
+            if (!chapter) {
+                return;
+            }
+
+            const result =
+                await toggleBookmark({
+                    id: `chapter:${chapter._id}`,
+                    type: "chapter",
+                    title: chapter.name,
+                    subtitle: `Chapter ${chapter.chapterNumber}`,
+                    chapterId: chapter._id,
+                    createdAt: new Date().toISOString(),
+                });
+
+            setBookmarked(result);
+        };
     useEffect(() => {
         Animated.parallel([
             Animated.timing(contentFade, {
@@ -287,6 +326,10 @@ export default function ChapterDetailsScreen() {
                         lectures, and test your knowledge with the practice
                         questions below to build a solid understanding.
                     </Text>
+                    <BookmarkButton
+                        bookmarked={bookmarked}
+                        onPress={handleToggleBookmark}
+                    />
                 </View>
 
                 {/* Options Section */}
