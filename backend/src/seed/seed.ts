@@ -1,7 +1,5 @@
-import dotenv from "dotenv";
 import mongoose from "mongoose";
-
-import { connectDatabase } from "../config/db";
+import dotenv from "dotenv";
 
 import ClassModel from "../models/Class";
 import SubjectModel from "../models/Subject";
@@ -10,43 +8,53 @@ import NoteModel from "../models/Note";
 import VideoModel from "../models/Video";
 import QuestionModel from "../models/Question";
 
-import { classData } from "./data/classData";
-import { subjectData } from "./data/subjectData";
-import { chapterData } from "./data/chapterData";
-import { noteData } from "./data/noteData";
-import { videoData } from "./data/videoData";
-import { questionData } from "./data/questionData";
+import { classData } from "./data/classes/classData";
+import { subjectData } from "./data/subjects/subjectData";
+
+import { class6ChapterData } from "./data/chapters/class6";
+import { class6NoteData } from "./data/notes/class6";
+import { class6VideoData } from "./data/videos/class6";
+import { class6QuestionData } from "./data/questions/class6";
 
 dotenv.config();
 
 const seedDatabase = async (): Promise<void> => {
     try {
-        console.log("Starting database seed...");
+        const mongoUri = process.env.MONGODB_URI;
 
-        await connectDatabase();
+        if (!mongoUri) {
+            throw new Error("MONGODB_URI is not defined");
+        }
 
-        console.log("Clearing existing data...");
+        await mongoose.connect(mongoUri);
 
+        console.log("MongoDB connected");
+
+        await QuestionModel.deleteMany({});
+        await VideoModel.deleteMany({});
         await NoteModel.deleteMany({});
         await ChapterModel.deleteMany({});
         await SubjectModel.deleteMany({});
         await ClassModel.deleteMany({});
-        await VideoModel.deleteMany({});
-        await QuestionModel.deleteMany({});
 
-        console.log("Seeding classes...");
+        console.log("Existing data cleared");
 
-        const classes = await ClassModel.insertMany(
-            classData
-        );
+        // --------------------------------
+        // Classes
+        // --------------------------------
+
+        const classes =
+            await ClassModel.insertMany(classData);
 
         console.log(
-            `${classes.length} classes seeded successfully`
+            `Inserted ${classes.length} classes`
         );
 
-        console.log("Seeding subjects...");
+        // --------------------------------
+        // Subjects
+        // --------------------------------
 
-        const subjectDocuments = classes.flatMap(
+        const subjectsToInsert = classes.flatMap(
             (classItem) =>
                 subjectData.map((subject) => ({
                     classId: classItem._id,
@@ -55,283 +63,332 @@ const seedDatabase = async (): Promise<void> => {
                 }))
         );
 
-        const subjects = await SubjectModel.insertMany(
-            subjectDocuments
-        );
+        const subjects =
+            await SubjectModel.insertMany(
+                subjectsToInsert
+            );
 
         console.log(
-            `${subjects.length} subjects seeded successfully`
+            `Inserted ${subjects.length} subjects`
         );
 
-        console.log("Seeding chapters...");
+        // --------------------------------
+        // Chapters
+        // --------------------------------
 
-        const chapterDocuments = [];
+        const chapterSources = [
+            {
+                classNumber: 6,
+                data: class6ChapterData,
+            },
+        ];
 
-        for (const chapterGroup of chapterData) {
+        const chaptersToInsert: {
+            subjectId: mongoose.Types.ObjectId;
+            chapterNumber: number;
+            name: string;
+            slug: string;
+        }[] = [];
+
+        for (const source of chapterSources) {
             const classItem = classes.find(
                 (item) =>
                     item.classNumber ===
-                    chapterGroup.classNumber
+                    source.classNumber
             );
 
             if (!classItem) {
-                console.warn(
-                    `Class ${chapterGroup.classNumber} not found. Skipping chapters.`
-                );
-
                 continue;
             }
 
-            const subject = subjects.find(
-                (item) =>
-                    item.classId.toString() ===
-                    classItem._id.toString() &&
-                    item.slug ===
-                    chapterGroup.subjectSlug
-            );
-
-            if (!subject) {
-                console.warn(
-                    `Subject ${chapterGroup.subjectSlug} not found for Class ${chapterGroup.classNumber}.`
+            for (const subjectDataItem of source.data) {
+                const subject = subjects.find(
+                    (item) =>
+                        item.classId.equals(
+                            classItem._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.subjectSlug
                 );
 
-                continue;
-            }
+                if (!subject) {
+                    continue;
+                }
 
-            for (const chapter of chapterGroup.chapters) {
-                chapterDocuments.push({
-                    subjectId: subject._id,
-                    chapterNumber: chapter.chapterNumber,
-                    name: chapter.name,
-                    slug: chapter.slug,
-                });
+                for (const chapter of subjectDataItem.chapters) {
+                    chaptersToInsert.push({
+                        subjectId: subject._id,
+                        chapterNumber:
+                            chapter.chapterNumber,
+                        name: chapter.name,
+                        slug: chapter.slug,
+                    });
+                }
             }
         }
 
-        if (chapterDocuments.length > 0) {
+        const chapters =
             await ChapterModel.insertMany(
-                chapterDocuments
+                chaptersToInsert
             );
-        }
 
         console.log(
-            `${chapterDocuments.length} chapters seeded successfully`
+            `Inserted ${chapters.length} chapters`
         );
-        console.log("Seeding notes...");
 
-        const noteDocuments = [];
+        // --------------------------------
+        // Notes
+        // --------------------------------
 
-        for (const noteGroup of noteData) {
+        const noteSources = [
+            {
+                classNumber: 6,
+                data: class6NoteData,
+            },
+        ];
+
+        const notesToInsert: {
+            chapterId: mongoose.Types.ObjectId;
+            title: string;
+            content: string;
+            language: string;
+        }[] = [];
+
+        for (const source of noteSources) {
             const classItem = classes.find(
-                (item) => item.classNumber === noteGroup.classNumber
+                (item) =>
+                    item.classNumber ===
+                    source.classNumber
             );
 
             if (!classItem) {
-                console.warn(
-                    `Class ${noteGroup.classNumber} not found. Skipping notes.`
-                );
-
                 continue;
             }
 
-            const subject = subjects.find(
-                (item) =>
-                    item.classId.toString() === classItem._id.toString() &&
-                    item.slug === noteGroup.subjectSlug
+            for (const subjectDataItem of source.data) {
+                const subject = subjects.find(
+                    (item) =>
+                        item.classId.equals(
+                            classItem._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.subjectSlug
+                );
+
+                if (!subject) {
+                    continue;
+                }
+
+                const chapter = chapters.find(
+                    (item) =>
+                        item.subjectId.equals(
+                            subject._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.chapterSlug
+                );
+
+                if (!chapter) {
+                    continue;
+                }
+
+                for (const note of subjectDataItem.notes) {
+                    notesToInsert.push({
+                        chapterId: chapter._id,
+                        title: note.title,
+                        content: note.content,
+                        language: note.language,
+                    });
+                }
+            }
+        }
+
+        const notes =
+            await NoteModel.insertMany(
+                notesToInsert
             );
 
-            if (!subject) {
-                console.warn(
-                    `Subject ${noteGroup.subjectSlug} not found for Class ${noteGroup.classNumber}.`
-                );
-
-                continue;
-            }
-
-            const chapter = await ChapterModel.findOne({
-                subjectId: subject._id,
-                slug: noteGroup.chapterSlug,
-            });
-
-            if (!chapter) {
-                console.warn(
-                    `Chapter ${noteGroup.chapterSlug} not found. Skipping notes.`
-                );
-
-                continue;
-            }
-
-            for (const note of noteGroup.notes) {
-                noteDocuments.push({
-                    chapterId: chapter._id,
-                    title: note.title,
-                    content: note.content,
-                    language: note.language,
-                });
-            }
-        }
-
-        if (noteDocuments.length > 0) {
-            await NoteModel.insertMany(noteDocuments);
-        }
-
         console.log(
-            `${noteDocuments.length} notes seeded successfully`
+            `Inserted ${notes.length} notes`
         );
 
-        console.log("Seeding videos...");
+        // --------------------------------
+        // Videos
+        // --------------------------------
 
-        const videoDocuments = [];
+        const videoSources = [
+            {
+                classNumber: 6,
+                data: class6VideoData,
+            },
+        ];
 
-        for (const videoGroup of videoData) {
+        const videosToInsert: {
+            chapterId: mongoose.Types.ObjectId;
+            title: string;
+            youtubeVideoId: string;
+            channelName: string;
+            language: string;
+        }[] = [];
+
+        for (const source of videoSources) {
             const classItem = classes.find(
-                (item) => item.classNumber === videoGroup.classNumber
+                (item) =>
+                    item.classNumber ===
+                    source.classNumber
             );
 
             if (!classItem) {
-                console.warn(
-                    `Class ${videoGroup.classNumber} not found. Skipping videos.`
-                );
-
                 continue;
             }
 
-            const subject = subjects.find(
-                (item) =>
-                    item.classId.toString() === classItem._id.toString() &&
-                    item.slug === videoGroup.subjectSlug
+            for (const subjectDataItem of source.data) {
+                const subject = subjects.find(
+                    (item) =>
+                        item.classId.equals(
+                            classItem._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.subjectSlug
+                );
+
+                if (!subject) {
+                    continue;
+                }
+
+                const chapter = chapters.find(
+                    (item) =>
+                        item.subjectId.equals(
+                            subject._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.chapterSlug
+                );
+
+                if (!chapter) {
+                    continue;
+                }
+
+                for (const video of subjectDataItem.videos) {
+                    videosToInsert.push({
+                        chapterId: chapter._id,
+                        title: video.title,
+                        youtubeVideoId:
+                            video.youtubeVideoId,
+                        channelName:
+                            video.channelName,
+                        language: video.language,
+                    });
+                }
+            }
+        }
+
+        const videos =
+            await VideoModel.insertMany(
+                videosToInsert
             );
 
-            if (!subject) {
-                console.warn(
-                    `Subject ${videoGroup.subjectSlug} not found for Class ${videoGroup.classNumber}.`
-                );
-
-                continue;
-            }
-
-            const chapter = await ChapterModel.findOne({
-                subjectId: subject._id,
-                slug: videoGroup.chapterSlug,
-            });
-
-            if (!chapter) {
-                console.warn(
-                    `Chapter ${videoGroup.chapterSlug} not found. Skipping videos.`
-                );
-
-                continue;
-            }
-
-            for (const video of videoGroup.videos) {
-                videoDocuments.push({
-                    chapterId: chapter._id,
-                    title: video.title,
-                    youtubeVideoId: video.youtubeVideoId,
-                    channelName: video.channelName,
-                    language: video.language,
-                });
-            }
-        }
-
-        if (videoDocuments.length > 0) {
-            await VideoModel.insertMany(videoDocuments);
-        }
-
         console.log(
-            `${videoDocuments.length} videos seeded successfully`
+            `Inserted ${videos.length} videos`
         );
-        console.log("Seeding questions...");
 
-        const questionDocuments = [];
+        // --------------------------------
+        // Questions
+        // --------------------------------
 
-        for (const questionGroup of questionData) {
+        const questionSources = [
+            {
+                classNumber: 6,
+                data: class6QuestionData,
+            },
+        ];
+
+        const questionsToInsert: {
+            chapterId: mongoose.Types.ObjectId;
+            question: string;
+            options: string[];
+            correctAnswer: number;
+            explanation: string;
+        }[] = [];
+
+        for (const source of questionSources) {
             const classItem = classes.find(
                 (item) =>
-                    item.classNumber === questionGroup.classNumber
+                    item.classNumber ===
+                    source.classNumber
             );
 
             if (!classItem) {
-                console.warn(
-                    `Class ${questionGroup.classNumber} not found. Skipping questions.`
-                );
-
                 continue;
             }
 
-            const subject = subjects.find(
-                (item) =>
-                    item.classId.toString() ===
-                    classItem._id.toString() &&
-                    item.slug === questionGroup.subjectSlug
-            );
-
-            if (!subject) {
-                console.warn(
-                    `Subject ${questionGroup.subjectSlug} not found for Class ${questionGroup.classNumber}.`
+            for (const subjectDataItem of source.data) {
+                const subject = subjects.find(
+                    (item) =>
+                        item.classId.equals(
+                            classItem._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.subjectSlug
                 );
 
-                continue;
-            }
+                if (!subject) {
+                    continue;
+                }
 
-            const chapter = await ChapterModel.findOne({
-                subjectId: subject._id,
-                slug: questionGroup.chapterSlug,
-            });
-
-            if (!chapter) {
-                console.warn(
-                    `Chapter ${questionGroup.chapterSlug} not found. Skipping questions.`
+                const chapter = chapters.find(
+                    (item) =>
+                        item.subjectId.equals(
+                            subject._id
+                        ) &&
+                        item.slug ===
+                        subjectDataItem.chapterSlug
                 );
 
-                continue;
-            }
+                if (!chapter) {
+                    continue;
+                }
 
-            for (const question of questionGroup.questions) {
-                questionDocuments.push({
-                    chapterId: chapter._id,
-                    question: question.question,
-                    options: question.options,
-                    correctAnswer: question.correctAnswer,
-                    explanation: question.explanation,
-                });
+                for (const question of subjectDataItem.questions) {
+                    questionsToInsert.push({
+                        chapterId: chapter._id,
+                        question:
+                            question.question,
+                        options:
+                            question.options,
+                        correctAnswer:
+                            question.correctAnswer,
+                        explanation:
+                            question.explanation,
+                    });
+                }
             }
         }
 
-        if (questionDocuments.length > 0) {
+        const questions =
             await QuestionModel.insertMany(
-                questionDocuments
+                questionsToInsert
             );
-        }
 
         console.log(
-            `${questionDocuments.length} questions seeded successfully`
+            `Inserted ${questions.length} questions`
         );
-        //===========================================================
+
         console.log("");
-        console.log("Database seed completed successfully.");
+        console.log(
+            "Database seeding completed successfully"
+        );
         console.log("");
 
-        console.log("Summary:");
-        console.log(`Classes: ${classes.length}`);
-        console.log(`Subjects: ${subjects.length}`);
-        console.log(`Chapters: ${chapterDocuments.length}`);
-        console.log(`Notes: ${noteDocuments.length}`);
-        console.log(`Videos: ${videoDocuments.length}`);
-        console.log(`Questions: ${questionDocuments.length}`);
-
-        await mongoose.connection.close();
-
-        process.exit(0);
     } catch (error) {
         console.error(
-            "Database seed failed:",
+            "Database seeding failed:",
             error
         );
 
-        await mongoose.connection.close();
-
         process.exit(1);
+    } finally {
+        await mongoose.disconnect();
     }
 };
 
