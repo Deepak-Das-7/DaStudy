@@ -1,5 +1,6 @@
-import mongoose from "mongoose";
 import dotenv from "dotenv";
+
+import { connectDatabase } from "../config/db";
 
 import ClassModel from "../models/Class";
 import SubjectModel from "../models/Subject";
@@ -11,24 +12,20 @@ import QuestionModel from "../models/Question";
 import { classData } from "./data/classes/classData";
 import { subjectData } from "./data/subjects/subjectData";
 
-import { class6ChapterData } from "./data/chapters/class6";
-import { class6NoteData } from "./data/notes/class6";
-import { class6VideoData } from "./data/videos/class6";
-import { class6QuestionData } from "./data/questions/class6";
+import {
+    chapterSources,
+    noteSources,
+    videoSources,
+    questionSources,
+} from "./seedRegistry";
 
 dotenv.config();
 
 const seedDatabase = async (): Promise<void> => {
     try {
-        const mongoUri = process.env.MONGODB_URI;
+        await connectDatabase();
 
-        if (!mongoUri) {
-            throw new Error("MONGODB_URI is not defined");
-        }
-
-        await mongoose.connect(mongoUri);
-
-        console.log("MongoDB connected");
+        console.log("Clearing existing data...");
 
         await QuestionModel.deleteMany({});
         await VideoModel.deleteMany({});
@@ -37,358 +34,319 @@ const seedDatabase = async (): Promise<void> => {
         await SubjectModel.deleteMany({});
         await ClassModel.deleteMany({});
 
-        console.log("Existing data cleared");
+        console.log("Existing data cleared.");
 
-        // --------------------------------
-        // Classes
-        // --------------------------------
+        // --------------------------------------------------
+        // CLASSES
+        // --------------------------------------------------
 
-        const classes =
-            await ClassModel.insertMany(classData);
-
-        console.log(
-            `Inserted ${classes.length} classes`
+        const classes = await ClassModel.insertMany(
+            classData
         );
 
-        // --------------------------------
-        // Subjects
-        // --------------------------------
+        console.log(
+            `Inserted ${classes.length} classes.`
+        );
 
-        const subjectsToInsert = classes.flatMap(
-            (classItem) =>
-                subjectData.map((subject) => ({
+        // --------------------------------------------------
+        // SUBJECTS
+        // --------------------------------------------------
+
+        const subjectsToInsert = [];
+
+        for (const classItem of classes) {
+            for (const subject of subjectData) {
+                subjectsToInsert.push({
                     classId: classItem._id,
                     name: subject.name,
                     slug: subject.slug,
-                }))
-        );
+                });
+            }
+        }
 
-        const subjects =
-            await SubjectModel.insertMany(
-                subjectsToInsert
-            );
+        const subjects = await SubjectModel.insertMany(
+            subjectsToInsert
+        );
 
         console.log(
-            `Inserted ${subjects.length} subjects`
+            `Inserted ${subjects.length} subjects.`
         );
 
-        // --------------------------------
-        // Chapters
-        // --------------------------------
+        // --------------------------------------------------
+        // CHAPTERS
+        // --------------------------------------------------
 
-        const chapterSources = [
-            {
-                classNumber: 6,
-                data: class6ChapterData,
-            },
-        ];
-
-        const chaptersToInsert: {
-            subjectId: mongoose.Types.ObjectId;
-            chapterNumber: number;
-            name: string;
-            slug: string;
-        }[] = [];
+        let chapterCount = 0;
 
         for (const source of chapterSources) {
             const classItem = classes.find(
                 (item) =>
-                    item.classNumber ===
-                    source.classNumber
+                    item.classNumber === source.classNumber
             );
 
             if (!classItem) {
+                console.warn(
+                    `Class ${source.classNumber} not found for chapters.`
+                );
+
                 continue;
             }
 
-            for (const subjectDataItem of source.data) {
+            for (const subjectSource of source.data) {
                 const subject = subjects.find(
                     (item) =>
-                        item.classId.equals(
-                            classItem._id
-                        ) &&
-                        item.slug ===
-                        subjectDataItem.subjectSlug
+                        item.classId.toString() ===
+                        classItem._id.toString() &&
+                        item.slug === subjectSource.subjectSlug
                 );
 
                 if (!subject) {
+                    console.warn(
+                        `Subject ${subjectSource.subjectSlug} not found for Class ${source.classNumber}.`
+                    );
+
                     continue;
                 }
 
-                for (const chapter of subjectDataItem.chapters) {
-                    chaptersToInsert.push({
+                const chapters = subjectSource.chapters.map(
+                    (chapter) => ({
+                        ...chapter,
                         subjectId: subject._id,
-                        chapterNumber:
-                            chapter.chapterNumber,
-                        name: chapter.name,
-                        slug: chapter.slug,
-                    });
-                }
+                    })
+                );
+
+                await ChapterModel.insertMany(chapters);
+
+                chapterCount += chapters.length;
             }
         }
 
-        const chapters =
-            await ChapterModel.insertMany(
-                chaptersToInsert
-            );
-
         console.log(
-            `Inserted ${chapters.length} chapters`
+            `Inserted ${chapterCount} chapters.`
         );
 
-        // --------------------------------
-        // Notes
-        // --------------------------------
+        // --------------------------------------------------
+        // NOTES
+        // --------------------------------------------------
 
-        const noteSources = [
-            {
-                classNumber: 6,
-                data: class6NoteData,
-            },
-        ];
-
-        const notesToInsert: {
-            chapterId: mongoose.Types.ObjectId;
-            title: string;
-            content: string;
-            language: string;
-        }[] = [];
+        let noteCount = 0;
 
         for (const source of noteSources) {
             const classItem = classes.find(
                 (item) =>
-                    item.classNumber ===
-                    source.classNumber
+                    item.classNumber === source.classNumber
             );
 
             if (!classItem) {
+                console.warn(
+                    `Class ${source.classNumber} not found for notes.`
+                );
+
                 continue;
             }
 
-            for (const subjectDataItem of source.data) {
+            for (const noteSource of source.data) {
                 const subject = subjects.find(
                     (item) =>
-                        item.classId.equals(
-                            classItem._id
-                        ) &&
-                        item.slug ===
-                        subjectDataItem.subjectSlug
+                        item.classId.toString() ===
+                        classItem._id.toString() &&
+                        item.slug === noteSource.subjectSlug
                 );
 
                 if (!subject) {
+                    console.warn(
+                        `Subject ${noteSource.subjectSlug} not found for notes.`
+                    );
+
                     continue;
                 }
 
-                const chapter = chapters.find(
-                    (item) =>
-                        item.subjectId.equals(
-                            subject._id
-                        ) &&
-                        item.slug ===
-                        subjectDataItem.chapterSlug
-                );
+                const chapter = await ChapterModel.findOne({
+                    subjectId: subject._id,
+                    slug: noteSource.chapterSlug,
+                });
 
                 if (!chapter) {
+                    console.warn(
+                        `Chapter ${noteSource.chapterSlug} not found for notes.`
+                    );
+
                     continue;
                 }
 
-                for (const note of subjectDataItem.notes) {
-                    notesToInsert.push({
+                const notes = noteSource.notes.map(
+                    (note) => ({
+                        ...note,
                         chapterId: chapter._id,
-                        title: note.title,
-                        content: note.content,
-                        language: note.language,
-                    });
-                }
+                    })
+                );
+
+                await NoteModel.insertMany(notes);
+
+                noteCount += notes.length;
             }
         }
 
-        const notes =
-            await NoteModel.insertMany(
-                notesToInsert
-            );
-
         console.log(
-            `Inserted ${notes.length} notes`
+            `Inserted ${noteCount} notes.`
         );
 
-        // --------------------------------
-        // Videos
-        // --------------------------------
+        // --------------------------------------------------
+        // VIDEOS
+        // --------------------------------------------------
 
-        const videoSources = [
-            {
-                classNumber: 6,
-                data: class6VideoData,
-            },
-        ];
-
-        const videosToInsert: {
-            chapterId: mongoose.Types.ObjectId;
-            title: string;
-            youtubeVideoId: string;
-            channelName: string;
-            language: string;
-        }[] = [];
+        let videoCount = 0;
 
         for (const source of videoSources) {
             const classItem = classes.find(
                 (item) =>
-                    item.classNumber ===
-                    source.classNumber
+                    item.classNumber === source.classNumber
             );
 
             if (!classItem) {
+                console.warn(
+                    `Class ${source.classNumber} not found for videos.`
+                );
+
                 continue;
             }
 
-            for (const subjectDataItem of source.data) {
+            for (const videoSource of source.data) {
                 const subject = subjects.find(
                     (item) =>
-                        item.classId.equals(
-                            classItem._id
-                        ) &&
-                        item.slug ===
-                        subjectDataItem.subjectSlug
+                        item.classId.toString() ===
+                        classItem._id.toString() &&
+                        item.slug === videoSource.subjectSlug
                 );
 
                 if (!subject) {
+                    console.warn(
+                        `Subject ${videoSource.subjectSlug} not found for videos.`
+                    );
+
                     continue;
                 }
 
-                const chapter = chapters.find(
-                    (item) =>
-                        item.subjectId.equals(
-                            subject._id
-                        ) &&
-                        item.slug ===
-                        subjectDataItem.chapterSlug
-                );
+                const chapter = await ChapterModel.findOne({
+                    subjectId: subject._id,
+                    slug: videoSource.chapterSlug,
+                });
 
                 if (!chapter) {
+                    console.warn(
+                        `Chapter ${videoSource.chapterSlug} not found for videos.`
+                    );
+
                     continue;
                 }
 
-                for (const video of subjectDataItem.videos) {
-                    videosToInsert.push({
+                const videos = videoSource.videos.map(
+                    (video) => ({
+                        ...video,
                         chapterId: chapter._id,
-                        title: video.title,
-                        youtubeVideoId:
-                            video.youtubeVideoId,
-                        channelName:
-                            video.channelName,
-                        language: video.language,
-                    });
-                }
+                    })
+                );
+
+                await VideoModel.insertMany(videos);
+
+                videoCount += videos.length;
             }
         }
 
-        const videos =
-            await VideoModel.insertMany(
-                videosToInsert
-            );
-
         console.log(
-            `Inserted ${videos.length} videos`
+            `Inserted ${videoCount} videos.`
         );
 
-        // --------------------------------
-        // Questions
-        // --------------------------------
+        // --------------------------------------------------
+        // QUESTIONS
+        // --------------------------------------------------
 
-        const questionSources = [
-            {
-                classNumber: 6,
-                data: class6QuestionData,
-            },
-        ];
-
-        const questionsToInsert: {
-            chapterId: mongoose.Types.ObjectId;
-            question: string;
-            options: string[];
-            correctAnswer: number;
-            explanation: string;
-        }[] = [];
+        let questionCount = 0;
 
         for (const source of questionSources) {
             const classItem = classes.find(
                 (item) =>
-                    item.classNumber ===
-                    source.classNumber
+                    item.classNumber === source.classNumber
             );
 
             if (!classItem) {
+                console.warn(
+                    `Class ${source.classNumber} not found for questions.`
+                );
+
                 continue;
             }
 
-            for (const subjectDataItem of source.data) {
+            for (const questionSource of source.data) {
                 const subject = subjects.find(
                     (item) =>
-                        item.classId.equals(
-                            classItem._id
-                        ) &&
+                        item.classId.toString() ===
+                        classItem._id.toString() &&
                         item.slug ===
-                        subjectDataItem.subjectSlug
+                        questionSource.subjectSlug
                 );
 
                 if (!subject) {
+                    console.warn(
+                        `Subject ${questionSource.subjectSlug} not found for questions.`
+                    );
+
                     continue;
                 }
 
-                const chapter = chapters.find(
-                    (item) =>
-                        item.subjectId.equals(
-                            subject._id
-                        ) &&
-                        item.slug ===
-                        subjectDataItem.chapterSlug
-                );
+                const chapter = await ChapterModel.findOne({
+                    subjectId: subject._id,
+                    slug: questionSource.chapterSlug,
+                });
 
                 if (!chapter) {
+                    console.warn(
+                        `Chapter ${questionSource.chapterSlug} not found for questions.`
+                    );
+
                     continue;
                 }
 
-                for (const question of subjectDataItem.questions) {
-                    questionsToInsert.push({
-                        chapterId: chapter._id,
-                        question:
-                            question.question,
-                        options:
-                            question.options,
-                        correctAnswer:
-                            question.correctAnswer,
-                        explanation:
-                            question.explanation,
-                    });
-                }
+                const questions =
+                    questionSource.questions.map(
+                        (question) => ({
+                            ...question,
+                            chapterId: chapter._id,
+                        })
+                    );
+
+                await QuestionModel.insertMany(
+                    questions
+                );
+
+                questionCount += questions.length;
             }
         }
 
-        const questions =
-            await QuestionModel.insertMany(
-                questionsToInsert
-            );
-
         console.log(
-            `Inserted ${questions.length} questions`
+            `Inserted ${questionCount} questions.`
         );
 
         console.log("");
-        console.log(
-            "Database seeding completed successfully"
-        );
-        console.log("");
-
+        console.log("================================");
+        console.log("Database seed completed");
+        console.log("================================");
+        console.log(`Classes:    ${classes.length}`);
+        console.log(`Subjects:   ${subjects.length}`);
+        console.log(`Chapters:   ${chapterCount}`);
+        console.log(`Notes:      ${noteCount}`);
+        console.log(`Videos:     ${videoCount}`);
+        console.log(`Questions:  ${questionCount}`);
+        console.log("================================");
     } catch (error) {
         console.error(
-            "Database seeding failed:",
+            "Database seed failed:",
             error
         );
 
-        process.exit(1);
+        process.exitCode = 1;
     } finally {
-        await mongoose.disconnect();
+        process.exit();
     }
 };
 
