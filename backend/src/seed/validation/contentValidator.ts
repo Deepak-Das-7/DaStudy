@@ -62,6 +62,16 @@ type QuestionChapterData = {
     questions: QuestionItem[];
 };
 
+type ClassData = {
+    classNumber: number;
+    name: string;
+};
+
+type SubjectData = {
+    name: string;
+    slug: string;
+};
+
 const errors: ValidationError[] = [];
 
 const addError = (
@@ -86,6 +96,83 @@ const validateLanguage = (
     }
 };
 
+/* =========================================================
+   CLASS VALIDATION
+========================================================= */
+
+const validateClasses = (
+    classData: ClassData[]
+): void => {
+    const classNumbers = new Set<number>();
+
+    for (const classItem of classData) {
+        if (classNumbers.has(classItem.classNumber)) {
+            addError(
+                "DUPLICATE_CLASS",
+                `Class ${classItem.classNumber}: duplicate class number.`
+            );
+        }
+
+        if (
+            classItem.classNumber < 1 ||
+            classItem.classNumber > 12
+        ) {
+            addError(
+                "INVALID_CLASS_NUMBER",
+                `Class ${classItem.classNumber}: class number must be between 1 and 12.`
+            );
+        }
+
+        if (!classItem.name.trim()) {
+            addError(
+                "EMPTY_CLASS_NAME",
+                `Class ${classItem.classNumber}: class name cannot be empty.`
+            );
+        }
+
+        classNumbers.add(classItem.classNumber);
+    }
+};
+
+/* =========================================================
+   SUBJECT VALIDATION
+========================================================= */
+
+const validateSubjects = (
+    subjectData: SubjectData[]
+): void => {
+    const subjectSlugs = new Set<string>();
+
+    for (const subject of subjectData) {
+        if (!subject.name.trim()) {
+            addError(
+                "EMPTY_SUBJECT_NAME",
+                "Subject name cannot be empty."
+            );
+        }
+
+        if (!subject.slug.trim()) {
+            addError(
+                "EMPTY_SUBJECT_SLUG",
+                "Subject slug cannot be empty."
+            );
+        }
+
+        if (subjectSlugs.has(subject.slug)) {
+            addError(
+                "DUPLICATE_SUBJECT",
+                `Duplicate subject slug "${subject.slug}".`
+            );
+        }
+
+        subjectSlugs.add(subject.slug);
+    }
+};
+
+/* =========================================================
+   CHAPTER VALIDATION
+========================================================= */
+
 const validateChapterData = (
     classNumber: number,
     data: ChapterSubjectData[]
@@ -95,8 +182,8 @@ const validateChapterData = (
     for (const subjectData of data) {
         if (subjectSlugs.has(subjectData.subjectSlug)) {
             addError(
-                "DUPLICATE_SUBJECT",
-                `Class ${classNumber}: duplicate subject slug "${subjectData.subjectSlug}".`
+                "DUPLICATE_CHAPTER_SUBJECT",
+                `Class ${classNumber}: duplicate chapter source for subject "${subjectData.subjectSlug}".`
             );
         }
 
@@ -155,11 +242,29 @@ const validateChapterData = (
     }
 };
 
+/* =========================================================
+   NOTE VALIDATION
+========================================================= */
+
 const validateNoteData = (
     classNumber: number,
     data: NoteChapterData[]
 ): void => {
+    const chapterReferences = new Set<string>();
+
     for (const chapterData of data) {
+        const chapterReference =
+            `${chapterData.subjectSlug}:${chapterData.chapterSlug}`;
+
+        if (chapterReferences.has(chapterReference)) {
+            addError(
+                "DUPLICATE_NOTE_CHAPTER",
+                `Class ${classNumber}: duplicate note source for ${chapterReference}.`
+            );
+        }
+
+        chapterReferences.add(chapterReference);
+
         const orders = new Set<number>();
 
         for (const note of chapterData.notes) {
@@ -204,11 +309,29 @@ const validateNoteData = (
     }
 };
 
+/* =========================================================
+   VIDEO VALIDATION
+========================================================= */
+
 const validateVideoData = (
     classNumber: number,
     data: VideoChapterData[]
 ): void => {
+    const chapterReferences = new Set<string>();
+
     for (const chapterData of data) {
+        const chapterReference =
+            `${chapterData.subjectSlug}:${chapterData.chapterSlug}`;
+
+        if (chapterReferences.has(chapterReference)) {
+            addError(
+                "DUPLICATE_VIDEO_CHAPTER",
+                `Class ${classNumber}: duplicate video source for ${chapterReference}.`
+            );
+        }
+
+        chapterReferences.add(chapterReference);
+
         const orders = new Set<number>();
 
         for (const video of chapterData.videos) {
@@ -260,11 +383,29 @@ const validateVideoData = (
     }
 };
 
+/* =========================================================
+   QUESTION VALIDATION
+========================================================= */
+
 const validateQuestionData = (
     classNumber: number,
     data: QuestionChapterData[]
 ): void => {
+    const chapterReferences = new Set<string>();
+
     for (const chapterData of data) {
+        const chapterReference =
+            `${chapterData.subjectSlug}:${chapterData.chapterSlug}`;
+
+        if (chapterReferences.has(chapterReference)) {
+            addError(
+                "DUPLICATE_QUESTION_CHAPTER",
+                `Class ${classNumber}: duplicate question source for ${chapterReference}.`
+            );
+        }
+
+        chapterReferences.add(chapterReference);
+
         const orders = new Set<number>();
 
         for (const question of chapterData.questions) {
@@ -326,7 +467,145 @@ const validateQuestionData = (
     }
 };
 
+/* =========================================================
+   RELATIONSHIP VALIDATION
+========================================================= */
+
+const validateChapterReferences = (
+    classData: ClassData[],
+    subjectData: SubjectData[],
+    chapterSources: {
+        classNumber: number;
+        data: ChapterSubjectData[];
+    }[]
+): void => {
+    const classes = new Set(
+        classData.map(
+            (item) => item.classNumber
+        )
+    );
+
+    const subjects = new Set(
+        subjectData.map(
+            (item) => item.slug
+        )
+    );
+
+    for (const source of chapterSources) {
+        if (!classes.has(source.classNumber)) {
+            addError(
+                "MISSING_CLASS_REFERENCE",
+                `Chapter source references Class ${source.classNumber}, but that class does not exist.`
+            );
+
+            continue;
+        }
+
+        for (const subject of source.data) {
+            if (!subjects.has(subject.subjectSlug)) {
+                addError(
+                    "MISSING_SUBJECT_REFERENCE",
+                    `Class ${source.classNumber}: subject "${subject.subjectSlug}" does not exist.`
+                );
+            }
+        }
+    }
+};
+
+const buildChapterReferenceSet = (
+    chapterSources: {
+        classNumber: number;
+        data: ChapterSubjectData[];
+    }[]
+): Set<string> => {
+    const references = new Set<string>();
+
+    for (const source of chapterSources) {
+        for (const subject of source.data) {
+            for (const chapter of subject.chapters) {
+                references.add(
+                    `${source.classNumber}:${subject.subjectSlug}:${chapter.slug}`
+                );
+            }
+        }
+    }
+
+    return references;
+};
+
+const validateContentReferences = (
+    chapterSources: {
+        classNumber: number;
+        data: ChapterSubjectData[];
+    }[],
+    noteSources: {
+        classNumber: number;
+        data: NoteChapterData[];
+    }[],
+    videoSources: {
+        classNumber: number;
+        data: VideoChapterData[];
+    }[],
+    questionSources: {
+        classNumber: number;
+        data: QuestionChapterData[];
+    }[]
+): void => {
+    const chapterReferences =
+        buildChapterReferenceSet(chapterSources);
+
+    for (const source of noteSources) {
+        for (const chapter of source.data) {
+            const reference =
+                `${source.classNumber}:${chapter.subjectSlug}:${chapter.chapterSlug}`;
+
+            if (!chapterReferences.has(reference)) {
+                addError(
+                    "ORPHAN_NOTE_REFERENCE",
+                    `Notes reference a chapter that does not exist: ${reference}.`
+                );
+            }
+        }
+    }
+
+    for (const source of videoSources) {
+        for (const chapter of source.data) {
+            const reference =
+                `${source.classNumber}:${chapter.subjectSlug}:${chapter.chapterSlug}`;
+
+            if (!chapterReferences.has(reference)) {
+                addError(
+                    "ORPHAN_VIDEO_REFERENCE",
+                    `Videos reference a chapter that does not exist: ${reference}.`
+                );
+            }
+        }
+    }
+
+    for (const source of questionSources) {
+        for (const chapter of source.data) {
+            const reference =
+                `${source.classNumber}:${chapter.subjectSlug}:${chapter.chapterSlug}`;
+
+            if (!chapterReferences.has(reference)) {
+                addError(
+                    "ORPHAN_QUESTION_REFERENCE",
+                    `Questions reference a chapter that does not exist: ${reference}.`
+                );
+            }
+        }
+    }
+};
+
+/* =========================================================
+   PUBLIC VALIDATOR
+========================================================= */
+
 export const validateSeedContent = (params: {
+    classData: ClassData[];
+
+    subjectData: SubjectData[];
+
     chapterSources: {
         classNumber: number;
         data: ChapterSubjectData[];
@@ -348,6 +627,14 @@ export const validateSeedContent = (params: {
     }[];
 }): void => {
     errors.length = 0;
+
+    validateClasses(
+        params.classData
+    );
+
+    validateSubjects(
+        params.subjectData
+    );
 
     for (const source of params.chapterSources) {
         validateChapterData(
@@ -377,11 +664,30 @@ export const validateSeedContent = (params: {
         );
     }
 
+    validateChapterReferences(
+        params.classData,
+        params.subjectData,
+        params.chapterSources
+    );
+
+    validateContentReferences(
+        params.chapterSources,
+        params.noteSources,
+        params.videoSources,
+        params.questionSources
+    );
+
     if (errors.length > 0) {
         console.error("");
-        console.error("================================");
-        console.error("CONTENT VALIDATION FAILED");
-        console.error("================================");
+        console.error(
+            "================================"
+        );
+        console.error(
+            "CONTENT VALIDATION FAILED"
+        );
+        console.error(
+            "================================"
+        );
 
         for (const error of errors) {
             console.error(
@@ -390,11 +696,14 @@ export const validateSeedContent = (params: {
         }
 
         console.error("");
+
         console.error(
             `Total validation errors: ${errors.length}`
         );
 
-        console.error("================================");
+        console.error(
+            "================================"
+        );
 
         throw new Error(
             `Content validation failed with ${errors.length} error(s).`
@@ -402,7 +711,13 @@ export const validateSeedContent = (params: {
     }
 
     console.log("");
-    console.log("================================");
-    console.log("CONTENT VALIDATION PASSED");
-    console.log("================================");
+    console.log(
+        "================================"
+    );
+    console.log(
+        "CONTENT VALIDATION PASSED"
+    );
+    console.log(
+        "================================"
+    );
 };

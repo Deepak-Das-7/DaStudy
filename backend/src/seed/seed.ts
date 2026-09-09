@@ -27,6 +27,8 @@ const seedDatabase = async (): Promise<void> => {
         console.log("Validating seed content...");
 
         validateSeedContent({
+            classData,
+            subjectData,
             chapterSources,
             noteSources,
             videoSources,
