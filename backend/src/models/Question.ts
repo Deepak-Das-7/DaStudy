@@ -6,6 +6,9 @@ export interface IQuestion extends Document {
     options: string[];
     correctAnswer: number;
     explanation: string;
+    language: string;
+    order: number;
+    isPublished: boolean;
 }
 
 const questionSchema = new Schema<IQuestion>(
@@ -42,14 +45,35 @@ const questionSchema = new Schema<IQuestion>(
             required: true,
             trim: true,
         },
+
+        language: {
+            type: String,
+            required: true,
+            trim: true,
+            lowercase: true,
+            enum: ["en", "hi"],
+            default: "en",
+        },
+
+        order: {
+            type: Number,
+            required: true,
+            min: 1,
+            default: 1,
+        },
+
+        isPublished: {
+            type: Boolean,
+            default: true,
+        },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 questionSchema.index({
     chapterId: 1,
+    isPublished: 1,
+    order: 1,
 });
 
 const QuestionModel = model<IQuestion>(

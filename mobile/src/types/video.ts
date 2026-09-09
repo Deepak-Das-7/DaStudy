@@ -5,6 +5,7 @@ export type VideoItem = {
     youtubeVideoId: string;
     channelName: string;
     language: string;
+    order: number;
 };
 
 export type VideosResponse = {

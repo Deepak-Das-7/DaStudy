@@ -6,6 +6,8 @@ export interface IVideo extends Document {
     youtubeVideoId: string;
     channelName: string;
     language: string;
+    order: number;
+    isPublished: boolean;
 }
 
 const videoSchema = new Schema<IVideo>(
@@ -39,16 +41,29 @@ const videoSchema = new Schema<IVideo>(
             required: true,
             trim: true,
             lowercase: true,
+            enum: ["en", "hi"],
             default: "en",
         },
+
+        order: {
+            type: Number,
+            required: true,
+            min: 1,
+            default: 1,
+        },
+
+        isPublished: {
+            type: Boolean,
+            default: true,
+        },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 videoSchema.index({
     chapterId: 1,
+    isPublished: 1,
+    order: 1,
 });
 
 const VideoModel = model<IVideo>("Video", videoSchema);

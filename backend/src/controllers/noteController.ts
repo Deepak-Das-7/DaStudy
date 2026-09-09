@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-
 import NoteModel from "../models/Note";
 
 export const getNotes = async (
@@ -10,15 +9,6 @@ export const getNotes = async (
     try {
         const { chapterId } = req.query;
 
-        if (!chapterId) {
-            res.status(400).json({
-                success: false,
-                message: "chapterId is required",
-            });
-
-            return;
-        }
-
         if (
             typeof chapterId !== "string" ||
             !mongoose.Types.ObjectId.isValid(chapterId)
@@ -27,15 +17,17 @@ export const getNotes = async (
                 success: false,
                 message: "Invalid chapterId",
             });
-
             return;
         }
 
         const notes = await NoteModel.find({
-            chapterId: new mongoose.Types.ObjectId(chapterId),
+            chapterId,
+            isPublished: true,
         })
-            .sort({ createdAt: 1 })
-            .select("chapterId title content language");
+            .sort({ order: 1 })
+            .select(
+                "chapterId title content language order"
+            );
 
         res.status(200).json({
             success: true,

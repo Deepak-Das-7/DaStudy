@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-
 import VideoModel from "../models/Video";
 
 export const getVideos = async (
@@ -10,15 +9,6 @@ export const getVideos = async (
     try {
         const { chapterId } = req.query;
 
-        if (!chapterId) {
-            res.status(400).json({
-                success: false,
-                message: "chapterId is required",
-            });
-
-            return;
-        }
-
         if (
             typeof chapterId !== "string" ||
             !mongoose.Types.ObjectId.isValid(chapterId)
@@ -27,16 +17,16 @@ export const getVideos = async (
                 success: false,
                 message: "Invalid chapterId",
             });
-
             return;
         }
 
         const videos = await VideoModel.find({
-            chapterId: new mongoose.Types.ObjectId(chapterId),
+            chapterId,
+            isPublished: true,
         })
-            .sort({ createdAt: 1 })
+            .sort({ order: 1 })
             .select(
-                "chapterId title youtubeVideoId channelName language"
+                "chapterId title youtubeVideoId channelName language order"
             );
 
         res.status(200).json({

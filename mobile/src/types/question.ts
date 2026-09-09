@@ -5,6 +5,8 @@ export type QuestionItem = {
     options: string[];
     correctAnswer: number;
     explanation: string;
+    language: string;
+    order: number;
 };
 
 export type QuestionsResponse = {

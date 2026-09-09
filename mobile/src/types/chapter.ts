@@ -4,6 +4,8 @@ export type ChapterItem = {
     chapterNumber: number;
     name: string;
     slug: string;
+    description?: string;
+    language: string;
 };
 
 export type ChaptersResponse = {

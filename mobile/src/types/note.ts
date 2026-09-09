@@ -4,6 +4,7 @@ export type NoteItem = {
     title: string;
     content: string;
     language: string;
+    order: number;
 };
 
 export type NotesResponse = {
