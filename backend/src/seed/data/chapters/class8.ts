@@ -1,4 +1,6 @@
-export const class8ChapterData = [
+import type { ChapterSubjectSeed } from "../../types/seedTypes";
+
+export const class8ChapterData: ChapterSubjectSeed[] = [
     {
         subjectSlug: "mathematics",
         chapters: [

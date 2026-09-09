@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import ClassModel from "../models/Class";
+import { sendSuccess } from "../utils/apiResponse";
 
 export const getClasses = async (
     _req: Request,
@@ -10,10 +11,12 @@ export const getClasses = async (
             .sort({ classNumber: 1 })
             .select("classNumber name");
 
-        res.status(200).json({
-            success: true,
-            data: classes,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Classes fetched successfully",
+            classes
+        );
     } catch (error) {
         console.error("Error fetching classes:", error);
 

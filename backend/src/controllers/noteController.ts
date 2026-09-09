@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
-import NoteModel from "../models/Note";
+import NoteModel, { type INote } from "../models/Note";
+import { sendSuccess } from "../utils/apiResponse";
 
 export const getNotes = async (
     req: Request,
@@ -29,10 +30,12 @@ export const getNotes = async (
                 "chapterId title content language order"
             );
 
-        res.status(200).json({
-            success: true,
-            data: notes,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Notes fetched successfully",
+            notes
+        );
     } catch (error) {
         console.error("Error fetching notes:", error);
 

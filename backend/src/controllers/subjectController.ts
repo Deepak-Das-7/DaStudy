@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import mongoose from "mongoose";
 
 import SubjectModel from "../models/Subject";
+import { sendSuccess } from "../utils/apiResponse";
 
 export const getSubjects = async (
     req: Request,
@@ -33,10 +34,12 @@ export const getSubjects = async (
             .sort({ name: 1 })
             .select("classId name slug");
 
-        res.status(200).json({
-            success: true,
-            data: subjects,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Subjects fetched successfully",
+            subjects
+        );
     } catch (error) {
         console.error("Error fetching subjects:", error);
 

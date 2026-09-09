@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import ChapterModel from "../models/Chapter";
+import { sendSuccess } from "../utils/apiResponse";
 
 export const getChapters = async (
     req: Request,
@@ -39,10 +40,12 @@ export const getChapters = async (
                 "subjectId chapterNumber name slug description language"
             );
 
-        res.status(200).json({
-            success: true,
-            data: chapters,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Chapters fetched successfully",
+            chapters
+        );
     } catch (error) {
         console.error("Error fetching chapters:", error);
 
@@ -86,10 +89,12 @@ export const getChapterById = async (
             return;
         }
 
-        res.status(200).json({
-            success: true,
-            data: chapter,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Chapter fetched successfully",
+            chapter
+        );
     } catch (error) {
         console.error("Error fetching chapter:", error);
 

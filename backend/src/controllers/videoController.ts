@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import VideoModel from "../models/Video";
+import { sendSuccess } from "../utils/apiResponse";
 
 export const getVideos = async (
     req: Request,
@@ -29,10 +30,12 @@ export const getVideos = async (
                 "chapterId title youtubeVideoId channelName language order"
             );
 
-        res.status(200).json({
-            success: true,
-            data: videos,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Videos fetched successfully",
+            videos
+        );
     } catch (error) {
         console.error("Error fetching videos:", error);
 

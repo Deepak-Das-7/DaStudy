@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import mongoose from "mongoose";
 import QuestionModel from "../models/Question";
+import { sendSuccess } from "../utils/apiResponse";
 
 export const getQuestions = async (
     req: Request,
@@ -29,10 +30,12 @@ export const getQuestions = async (
                 "chapterId question options correctAnswer explanation language order"
             );
 
-        res.status(200).json({
-            success: true,
-            data: questions,
-        });
+        sendSuccess(
+            res,
+            200,
+            "Questions fetched successfully",
+            questions
+        );
     } catch (error) {
         console.error(
             "Error fetching questions:",

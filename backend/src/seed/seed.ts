@@ -11,7 +11,10 @@ import QuestionModel from "../models/Question";
 
 import { classData } from "./data/classes/classData";
 import { subjectData } from "./data/subjects/subjectData";
-
+import {
+    createEmptySeedStats,
+    printSeedStats,
+} from "./utils/seedStats";
 import {
     chapterSources,
     noteSources,
@@ -25,7 +28,9 @@ import { seedChapters } from "./seeders/chapterSeeder";
 import { seedNotes } from "./seeders/noteSeeder";
 import { seedVideos } from "./seeders/videoSeeder";
 import { seedQuestions } from "./seeders/questionSeeder";
-
+import {
+    printContentSummary,
+} from "./utils/contentSummary";
 dotenv.config();
 
 const seedDatabase = async (): Promise<void> => {
@@ -40,7 +45,14 @@ const seedDatabase = async (): Promise<void> => {
             videoSources,
             questionSources,
         });
+        printContentSummary({
+            chapterSources,
+            noteSources,
+            videoSources,
+            questionSources,
+        });
 
+        const stats = createEmptySeedStats();
         await connectDatabase();
 
         console.log("Clearing existing data...");
@@ -57,7 +69,7 @@ const seedDatabase = async (): Promise<void> => {
         const classes = await ClassModel.insertMany(
             classData
         );
-
+        stats.classes = classes.length;
         console.log(
             `Inserted ${classes.length} classes.`
         );
@@ -78,28 +90,28 @@ const seedDatabase = async (): Promise<void> => {
             await SubjectModel.insertMany(
                 subjectsToInsert
             );
-
+        stats.subjects = subjects.length;
         console.log(
             `Inserted ${subjects.length} subjects.`
         );
 
         const chapterCount =
             await seedChapters(chapterSources);
-
+        stats.chapters = chapterCount;
         console.log(
             `Inserted ${chapterCount} chapters.`
         );
 
         const noteCount =
             await seedNotes(noteSources);
-
+        stats.notes = noteCount;
         console.log(
             `Inserted ${noteCount} notes.`
         );
 
         const videoCount =
             await seedVideos(videoSources);
-
+        stats.videos = videoCount;
         console.log(
             `Inserted ${videoCount} videos.`
         );
@@ -108,15 +120,13 @@ const seedDatabase = async (): Promise<void> => {
             await seedQuestions(
                 questionSources
             );
-
+        stats.questions = questionCount;
         console.log(
             `Inserted ${questionCount} questions.`
         );
 
-        console.log("");
-        console.log(
-            "================================"
-        );
+        printSeedStats(stats);
+
         console.log(
             "Database seed completed"
         );

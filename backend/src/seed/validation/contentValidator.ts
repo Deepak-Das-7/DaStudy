@@ -1,8 +1,11 @@
+import {
+    CONTENT_LANGUAGES,
+} from "../utils/contentConstants";
+
 type ValidationError = {
     type: string;
     message: string;
 };
-
 type ChapterItem = {
     chapterNumber: number;
     name: string;
@@ -88,14 +91,19 @@ const validateLanguage = (
     language: string,
     location: string
 ): void => {
-    if (!["en", "hi"].includes(language)) {
+    if (
+        !CONTENT_LANGUAGES.includes(
+            language as (typeof CONTENT_LANGUAGES)[number]
+        )
+    ) {
         addError(
             "INVALID_LANGUAGE",
-            `${location}: language must be "en" or "hi".`
+            `${location}: language must be one of ${CONTENT_LANGUAGES.join(
+                ", "
+            )}.`
         );
     }
 };
-
 /* =========================================================
    CLASS VALIDATION
 ========================================================= */

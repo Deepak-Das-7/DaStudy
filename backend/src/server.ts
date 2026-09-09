@@ -14,6 +14,7 @@ import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
 import questionRoutes from "./routes/questionRoutes";
 import searchRoutes from "./routes/searchRoutes";
+import { sendSuccess } from "./utils/apiResponse";
 
 dotenv.config();
 
@@ -31,10 +32,12 @@ app.get("/", (_req, res) => {
 });
 
 app.get("/health", (_req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "API is healthy",
-    });
+    return sendSuccess(
+        res,
+        200,
+        "API is healthy",
+        null
+    );
 });
 
 app.use("/api/classes", classRoutes);

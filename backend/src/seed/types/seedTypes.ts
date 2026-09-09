@@ -1,3 +1,12 @@
+import type {
+    ContentLanguage,
+} from "../utils/contentConstants";
+
+export type ContentMetadata = {
+    language: ContentLanguage;
+    isPublished: boolean;
+};
+
 export type ClassSeedItem = {
     classNumber: number;
     name: string;
@@ -13,9 +22,7 @@ export type ChapterSeedItem = {
     name: string;
     slug: string;
     description?: string;
-    language: string;
-    isPublished: boolean;
-};
+} & ContentMetadata;
 
 export type ChapterSubjectSeed = {
     subjectSlug: string;
@@ -25,10 +32,8 @@ export type ChapterSubjectSeed = {
 export type NoteSeedItem = {
     title: string;
     content: string;
-    language: string;
     order: number;
-    isPublished: boolean;
-};
+} & ContentMetadata;
 
 export type NoteChapterSeed = {
     subjectSlug: string;
@@ -40,10 +45,8 @@ export type VideoSeedItem = {
     title: string;
     youtubeVideoId: string;
     channelName: string;
-    language: string;
     order: number;
-    isPublished: boolean;
-};
+} & ContentMetadata;
 
 export type VideoChapterSeed = {
     subjectSlug: string;
@@ -56,10 +59,8 @@ export type QuestionSeedItem = {
     options: string[];
     correctAnswer: number;
     explanation: string;
-    language: string;
     order: number;
-    isPublished: boolean;
-};
+} & ContentMetadata;
 
 export type QuestionChapterSeed = {
     subjectSlug: string;
