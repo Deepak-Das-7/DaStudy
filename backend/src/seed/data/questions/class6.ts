@@ -1,6 +1,7 @@
 export const class6QuestionData = [
     {
         subjectSlug: "mathematics",
+
         chapterSlug: "knowing-our-numbers",
 
         questions: [
@@ -53,6 +54,65 @@ export const class6QuestionData = [
 
                 explanation:
                     "The number 25,678 contains five digits.",
+            },
+        ],
+    },
+
+    {
+        subjectSlug: "science",
+
+        chapterSlug: "food-and-its-sources",
+
+        questions: [
+            {
+                question:
+                    "Which of the following is a plant source of food?",
+
+                options: [
+                    "Rice",
+                    "Egg",
+                    "Fish",
+                    "Milk",
+                ],
+
+                correctAnswer: 0,
+
+                explanation:
+                    "Rice is obtained from a plant and is therefore a plant source of food.",
+            },
+
+            {
+                question:
+                    "Which of the following is obtained from an animal?",
+
+                options: [
+                    "Wheat",
+                    "Rice",
+                    "Milk",
+                    "Potato",
+                ],
+
+                correctAnswer: 2,
+
+                explanation:
+                    "Milk is obtained from animals such as cows and buffaloes.",
+            },
+
+            {
+                question:
+                    "Which part of a plant can be used as food?",
+
+                options: [
+                    "Only roots",
+                    "Only leaves",
+                    "Only fruits",
+                    "Different parts can be used as food",
+                ],
+
+                correctAnswer: 3,
+
+                explanation:
+                    "Different plants provide different edible parts such as roots, stems, leaves, fruits, and seeds.",
             },
         ],
     },

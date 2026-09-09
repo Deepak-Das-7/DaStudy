@@ -1,6 +1,7 @@
 export const class6ChapterData = [
     {
         subjectSlug: "mathematics",
+
         chapters: [
             {
                 chapterNumber: 1,
@@ -26,6 +27,28 @@ export const class6ChapterData = [
                 chapterNumber: 5,
                 name: "Understanding Elementary Shapes",
                 slug: "understanding-elementary-shapes",
+            },
+        ],
+    },
+
+    {
+        subjectSlug: "science",
+
+        chapters: [
+            {
+                chapterNumber: 1,
+                name: "Food and Its Sources",
+                slug: "food-and-its-sources",
+            },
+            {
+                chapterNumber: 2,
+                name: "Components of Food",
+                slug: "components-of-food",
+            },
+            {
+                chapterNumber: 3,
+                name: "Fibre to Fabric",
+                slug: "fibre-to-fabric",
             },
         ],
     },
