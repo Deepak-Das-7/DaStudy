@@ -11,6 +11,7 @@ import QuestionModel from "../models/Question";
 
 import { classData } from "./data/classes/classData";
 import { subjectData } from "./data/subjects/subjectData";
+import { validateSeedContent } from "./validation/contentValidator";
 
 import {
     chapterSources,
@@ -23,6 +24,14 @@ dotenv.config();
 
 const seedDatabase = async (): Promise<void> => {
     try {
+        console.log("Validating seed content...");
+
+        validateSeedContent({
+            chapterSources,
+            noteSources,
+            videoSources,
+            questionSources,
+        });
         await connectDatabase();
 
         console.log("Clearing existing data...");
