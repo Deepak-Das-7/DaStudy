@@ -1,19 +1,26 @@
 import { Router } from "express";
 
 import {
-    getChapterById,
     getChapters,
+    getChapterById,
 } from "../controllers/chapterController";
-import { validateObjectId } from "../utils/validateObjectId";
+
+import { asyncHandler } from "../middleware/asyncHandler";
 import { validateQueryObjectId } from "../middleware/validateQueryObjectId";
+import { validateObjectId } from "../utils/validateObjectId";
 
 const router = Router();
 
-router.get("/", validateQueryObjectId("subjectId"), getChapters);
+router.get(
+    "/",
+    validateQueryObjectId("subjectId"),
+    asyncHandler(getChapters)
+);
 
 router.get(
     "/:id",
     validateObjectId("id"),
-    getChapterById
+    asyncHandler(getChapterById)
 );
+
 export default router;

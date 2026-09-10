@@ -1,6 +1,10 @@
 import { Router } from "express";
 
-import { getSubjects } from "../controllers/subjectController";
+import {
+    getSubjects,
+} from "../controllers/subjectController";
+
+import { asyncHandler } from "../middleware/asyncHandler";
 import { validateQueryObjectId } from "../middleware/validateQueryObjectId";
 
 const router = Router();
@@ -8,6 +12,7 @@ const router = Router();
 router.get(
     "/",
     validateQueryObjectId("classId"),
-    getSubjects
+    asyncHandler(getSubjects)
 );
+
 export default router;

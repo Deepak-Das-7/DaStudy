@@ -8,44 +8,35 @@ export const getSubjects = async (
     req: Request,
     res: Response
 ): Promise<void> => {
-    try {
-        const { classId } = req.query;
+    const { classId } = req.query;
 
-        const filter: {
-            classId?: mongoose.Types.ObjectId;
-        } = {};
+    const filter: {
+        classId?: mongoose.Types.ObjectId;
+    } = {};
 
-        if (classId) {
-            if (!mongoose.Types.ObjectId.isValid(classId.toString())) {
-                res.status(400).json({
-                    success: false,
-                    message: "Invalid classId",
-                });
+    if (classId) {
+        if (!mongoose.Types.ObjectId.isValid(classId.toString())) {
+            res.status(400).json({
+                success: false,
+                message: "Invalid classId",
+            });
 
-                return;
-            }
-
-            filter.classId = new mongoose.Types.ObjectId(
-                classId.toString()
-            );
+            return;
         }
 
-        const subjects = await SubjectModel.find(filter)
-            .sort({ name: 1 })
-            .select("classId name slug");
-
-        sendSuccess(
-            res,
-            200,
-            "Subjects fetched successfully",
-            subjects
+        filter.classId = new mongoose.Types.ObjectId(
+            classId.toString()
         );
-    } catch (error) {
-        console.error("Error fetching subjects:", error);
-
-        res.status(500).json({
-            success: false,
-            message: "Failed to fetch subjects",
-        });
     }
+
+    const subjects = await SubjectModel.find(filter)
+        .sort({ name: 1 })
+        .select("classId name slug");
+
+    sendSuccess(
+        res,
+        200,
+        "Subjects fetched successfully",
+        subjects
+    );
 };
