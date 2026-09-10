@@ -4,11 +4,16 @@ import {
     getChapterById,
     getChapters,
 } from "../controllers/chapterController";
+import { validateObjectId } from "../utils/validateObjectId";
+import { validateQueryObjectId } from "../middleware/validateQueryObjectId";
 
 const router = Router();
 
-router.get("/", getChapters);
+router.get("/", validateQueryObjectId("subjectId"), getChapters);
 
-router.get("/:id", getChapterById);
-
+router.get(
+    "/:id",
+    validateObjectId("id"),
+    getChapterById
+);
 export default router;

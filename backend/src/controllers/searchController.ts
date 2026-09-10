@@ -6,6 +6,8 @@ import ChapterModel from "../models/Chapter";
 import NoteModel from "../models/Note";
 import VideoModel from "../models/Video";
 import QuestionModel from "../models/Question";
+import { sendError } from "../utils/apiResponse";
+import { API_ERROR_CODES } from "../constants/apiErrorCodes";
 
 export const searchContent = async (
     req: Request,
@@ -27,13 +29,12 @@ export const searchContent = async (
         }
 
         if (query.length < 2) {
-            res.status(400).json({
-                success: false,
-                message:
-                    "Search query must contain at least 2 characters",
-            });
-
-            return;
+            sendError(
+                res,
+                400,
+                "Search query must contain at least 2 characters",
+                API_ERROR_CODES.INVALID_QUERY
+            );
         }
 
         const searchRegex = new RegExp(
